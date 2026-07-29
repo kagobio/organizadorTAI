@@ -250,6 +250,21 @@
 
   .countdown-time { font-size: 72px; font-weight: 200; letter-spacing: -2px; font-variant-numeric: tabular-nums; margin: 20px 0; }
   .countdown-sub { font-size: 16px; color: var(--text-secondary); margin-bottom: 24px; }
+
+  /* ---- Mini temporizador (no bloquea la app) ---- */
+  .mini-timer {
+    position: fixed; left: 12px; right: 12px; bottom: calc(64px + var(--safe-bottom)); z-index: 45;
+    display: none; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--accent); color: #fff; border-radius: 14px; padding: 10px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.28); max-width: 616px; margin: 0 auto;
+  }
+  .mini-timer.active { display: flex; }
+  .mini-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .mini-time { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+  .mini-sub { font-size: 13px; opacity: 0.9; font-weight: 500; }
+  .mini-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .mini-actions button { color: #fff; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.22); border-radius: 9px; padding: 7px 11px; }
+  .mini-actions button:active { background: rgba(255,255,255,0.35); }
   .btn-stop { background: var(--danger); color: #fff; padding: 15px; border-radius: 12px; font-size: 17px; font-weight: 600; width: 100%; }
 
   .detail-task { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--separator); font-size: 17px; }
@@ -404,15 +419,15 @@
   </div>
 </div>
 
-<div class="sheet-backdrop center-mode" id="countdown-backdrop">
-  <div class="sheet centered">
-    <div class="countdown-sub" id="countdown-phase">📖 Estudio</div>
-    <div class="countdown-time" id="countdown-time">20:00</div>
-    <div class="countdown-sub" id="countdown-progress" style="margin-bottom:20px;">Bloque de estudio 1</div>
-    <div style="display:flex;gap:10px;">
-      <button class="btn-cancel" onclick="skipPhase()" style="flex:1;padding:15px;border-radius:12px;font-size:17px;font-weight:600;">Saltar</button>
-      <button class="btn-stop" onclick="stopTimer()" style="flex:1;">Terminar</button>
-    </div>
+<div id="mini-timer" class="mini-timer">
+  <div class="mini-left">
+    <span id="mini-phase">📖</span>
+    <span class="mini-time" id="mini-time">20:00</span>
+    <span class="mini-sub" id="mini-sub">Estudio</span>
+  </div>
+  <div class="mini-actions">
+    <button onclick="skipPhase()">Saltar</button>
+    <button onclick="stopTimer()">Terminar</button>
   </div>
 </div>
 
@@ -602,9 +617,10 @@ function renderHoy() {
     const done = !!day[t.key];
     const row = document.createElement('div');
     row.className = 'check-row' + (done ? ' done' : '');
+    const label = (block === 'Repaso' && t.key === 'estudiar') ? 'Repasar los puntos de hoy' : t.label;
     row.innerHTML = `
       <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></div>
-      <div class="check-label">${t.label}</div>`;
+      <div class="check-label">${label}</div>`;
     row.onclick = () => toggleTask(t.key);
     list.appendChild(row);
   });
@@ -1105,7 +1121,7 @@ function startPomodoro(studyMin) {
   phases = buildPhases(studyMin);
   phaseIdx = 0;
   startPhase();
-  document.getElementById('countdown-backdrop').classList.add('active');
+  document.getElementById('mini-timer').classList.add('active');
 }
 function startPhase() {
   remaining = phases[phaseIdx].secs;
@@ -1128,15 +1144,14 @@ function updatePhaseUI() {
   const p = phases[phaseIdx];
   const totalWork = phases.filter(x => x.type === 'work').length;
   const workDone = phases.slice(0, phaseIdx + 1).filter(x => x.type === 'work').length;
-  document.getElementById('countdown-phase').textContent = p.type === 'work' ? '📖 Estudio' : '☕ Descanso';
-  document.getElementById('countdown-progress').textContent = p.type === 'work'
-    ? `Bloque de estudio ${workDone} de ${totalWork}`
-    : 'Descanso de 5 minutos';
+  document.getElementById('mini-phase').textContent = p.type === 'work' ? '📖' : '☕';
+  document.getElementById('mini-sub').textContent = p.type === 'work' ? `Estudio ${workDone}/${totalWork}` : 'Descanso';
+  document.getElementById('mini-timer').style.background = p.type === 'work' ? 'var(--accent)' : 'var(--orange)';
   updateCountdownDisplay();
 }
 function updateCountdownDisplay() {
   const m = Math.floor(remaining / 60), s = remaining % 60;
-  document.getElementById('countdown-time').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('mini-time').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 function skipPhase() {
   clearInterval(timerInterval);
@@ -1147,13 +1162,13 @@ function skipPhase() {
 function stopTimer() {
   clearInterval(timerInterval); timerInterval = null;
   releaseWake();
-  document.getElementById('countdown-backdrop').classList.remove('active');
+  document.getElementById('mini-timer').classList.remove('active');
 }
 function finishTimer() {
   clearInterval(timerInterval); timerInterval = null;
   releaseWake();
   beep('finish');
-  document.getElementById('countdown-backdrop').classList.remove('active');
+  document.getElementById('mini-timer').classList.remove('active');
   const workMin = phases.filter(x => x.type === 'work').reduce((a, b) => a + b.secs, 0) / 60;
   document.getElementById('done-msg').textContent = `Buen trabajo. Has completado ${workMin} minutos de estudio.`;
   document.getElementById('done-backdrop').classList.add('active');
