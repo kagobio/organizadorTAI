@@ -524,6 +524,7 @@ function subscribeCloud() {
       state.examStart = d.examStart || '';
       state.topics = d.topics || {};
       state.session = d.session || null;
+      saveSessionLocal();
       remoteReady = true;
       showSync('Sincronizado ✓', true);
       renderAll();
@@ -538,6 +539,13 @@ function showSync(text, autohide) {
   b.textContent = text; b.classList.add('show');
   clearTimeout(syncTimeout);
   if (autohide) syncTimeout = setTimeout(() => b.classList.remove('show'), 1500);
+}
+// Copia local de la sesión, para restaurar el cronómetro al instante al refrescar.
+function saveSessionLocal() {
+  try {
+    if (state.session) localStorage.setItem('tai_session', JSON.stringify(state.session));
+    else localStorage.removeItem('tai_session');
+  } catch (e) {}
 }
 
 // ============ Utilidades de fecha ============
@@ -1131,6 +1139,7 @@ function startPomodoro(studyMin) {
   const segments = buildPhases(studyMin).map(p => { t += p.secs * 1000; return { type: p.type, end: t }; });
   state.session = { start: Date.now(), sMin: studyMin, segments };
   lastPhaseIdx = -1;
+  saveSessionLocal();
   pushToCloud({ session: state.session });
   onSessionUpdate();
 }
@@ -1148,6 +1157,7 @@ function onSessionUpdate() {
   if (state.session && state.session.segments) {
     if (computeSession(state.session, Date.now()).finished) {
       state.session = null;      // sesión ya caducada: limpiar sin avisar
+      saveSessionLocal();
       pushToCloud({ session: null });
       hideMiniTimer();
       return;
@@ -1174,6 +1184,7 @@ function tickSync() {
     const sMin = state.session.sMin;
     const wasWatching = lastPhaseIdx !== -1;
     state.session = null;
+    saveSessionLocal();
     pushToCloud({ session: null });
     hideMiniTimer();
     if (wasWatching) {
@@ -1204,11 +1215,13 @@ function skipPhase() {
   const segs = state.session.segments;
   const delta = segs[st.idx].end - now;
   for (let j = st.idx; j < segs.length; j++) segs[j].end -= delta;
+  saveSessionLocal();
   pushToCloud({ session: state.session });
   onSessionUpdate();
 }
 function stopTimer() {
   state.session = null;
+  saveSessionLocal();
   pushToCloud({ session: null });
   hideMiniTimer();
 }
@@ -1251,6 +1264,10 @@ function releaseWake() {
 
 // ============ Init ============
 renderHoy();       // pinta ya con estado vacío
+// Restaura el cronómetro al instante desde el navegador (por si refrescas),
+// antes incluso de que responda Firestore.
+try { const s = localStorage.getItem('tai_session'); if (s) state.session = JSON.parse(s); } catch (e) {}
+onSessionUpdate();
 subscribeCloud();  // y se rellena/actualiza al llegar los datos de Firestore
 </script>
 </body>
