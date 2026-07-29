@@ -112,6 +112,17 @@
   .repaso-days { font-size: 14px; color: var(--text-secondary); white-space: nowrap; }
   .repaso-days.overdue { color: var(--accent); font-weight: 600; }
 
+  /* ---- Mi plan ---- */
+  .plan-link { display: inline-block; font-size: 14px; color: var(--accent); margin-top: 8px; cursor: pointer; }
+  #plan-list { background: var(--card); border: 1px solid var(--separator); border-radius: 16px; overflow: hidden; margin-top: 6px; }
+  .plan-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--separator); }
+  .plan-row:last-child { border-bottom: none; }
+  .plan-row.today { background: var(--bg-elevated); }
+  .plan-day { font-size: 16px; font-weight: 600; }
+  .plan-block { text-align: right; }
+  .plan-block .b { font-size: 15px; font-weight: 600; }
+  .plan-block .c { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
   .section-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 4px; }
   .checklist { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--separator); }
   .check-row {
@@ -255,6 +266,7 @@
   <div class="today-header">
     <div class="today-weekday" id="hoy-weekday">—</div>
     <div class="today-date" id="hoy-date">—</div>
+    <a class="plan-link" onclick="openPlanSheet()">📅 Ver plan semanal</a>
   </div>
 
   <div class="exam-card" onclick="openExamSheet()">
@@ -431,6 +443,15 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="plan-backdrop" onclick="if(event.target===this)closePlanSheet()">
+  <div class="sheet">
+    <h2>Mi plan semanal</h2>
+    <div class="countdown-sub" style="margin-top:-8px;">Cada día tiene su bloque fijo. El domingo toca repaso.</div>
+    <div id="plan-list"></div>
+    <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closePlanSheet()">Cerrar</button>
+  </div>
+</div>
+
 <!-- ==================== FIREBASE SDK (compat) ==================== -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -507,17 +528,18 @@ const DOW_SHORT = ['L','M','X','J','V','S','D'];
 function keyOf(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
-function blockFor(d) {
-  switch (d.getDay()) {
+function blockForDay(day) {
+  switch (day) {
     case 1: return 'Bloque 4';
     case 2: return 'Bloque 2';
     case 3: return 'Bloque 4';
     case 4: return 'Bloque 3';
     case 5: return 'Bloque 4';
     case 6: return 'Bloque 1';
-    default: return 'Práctica';
+    default: return 'Repaso';
   }
 }
+function blockFor(d) { return blockForDay(d.getDay()); }
 const TASKS = [
   { key: 'repasar',  label: 'Repasar 20 minutos' },
   { key: 'estudiar', label: 'Estudiar el bloque correspondiente' },
@@ -558,12 +580,12 @@ function renderHoy() {
   document.getElementById('hoy-date').textContent = `${now.getDate()} de ${MONTHS[now.getMonth()]} de ${now.getFullYear()}`;
   const block = blockFor(now);
   document.getElementById('hoy-block').textContent = block;
-  document.getElementById('hoy-block-emoji').textContent = block === 'Práctica' ? '📝' : '📘';
+  document.getElementById('hoy-block-emoji').textContent = block === 'Repaso' ? '🔁' : '📘';
 
   const topicList = TOPICS[block] || [];
   const sug = suggestReview(block);
   const suggestEl = document.getElementById('hoy-suggest');
-  if (topicList.length === 0) suggestEl.textContent = 'Día de práctica · toca para ver';
+  if (topicList.length === 0) suggestEl.textContent = 'Día de repaso · toca para ver';
   else if (sug) suggestEl.textContent = `Repaso sugerido: ${sug.name} (hace ${sug.days} d.) · toca`;
   else suggestEl.textContent = 'Toca para marcar el tema que estudies';
 
@@ -750,7 +772,12 @@ const TOPICS = {
     {id:'B4-T9',     name:'T9 · Seguridad en redes y VPN'},
     {id:'B4-T10',    name:'T10 · Redes LAN'}
   ],
-  'Práctica': []
+  'Repaso': [
+    {id:'REP-subnetting',     name:'Practicar subnetting'},
+    {id:'REP-linux',          name:'Comandos de Linux'},
+    {id:'REP-protocolos',     name:'Protocolos y puertos'},
+    {id:'REP-virtualizacion', name:'Comandos de virtualización'}
+  ]
 };
 
 function daysSince(dateStr) {
@@ -794,7 +821,7 @@ function closeTopicsSheet() { document.getElementById('topics-backdrop').classLi
 function renderTopicsSuggest(block) {
   const el = document.getElementById('topics-suggest');
   const list = TOPICS[block] || [];
-  if (list.length === 0) { el.textContent = 'Día de práctica: no hay temas que marcar.'; return; }
+  if (list.length === 0) { el.textContent = 'No hay temas para este día.'; return; }
   const sug = suggestReview(block);
   el.textContent = sug ? `📌 Toca repasar: ${sug.name} (hace ${sug.days} día${sug.days===1?'':'s'})`
                        : 'Marca el tema que estudies hoy para empezar a contabilizar los repasos.';
@@ -804,7 +831,7 @@ function renderTopicsList(block) {
   cont.innerHTML = '';
   const list = TOPICS[block] || [];
   if (list.length === 0) {
-    cont.innerHTML = '<div class="empty-state" style="margin-top:20px;">Los domingos toca práctica libre.</div>';
+    cont.innerHTML = '<div class="empty-state" style="margin-top:20px;">No hay temas para este día.</div>';
     return;
   }
   const todayKey = keyOf(new Date());
@@ -1014,6 +1041,35 @@ function renderRepasos() {
       <div class="repaso-days${overdue ? ' overdue' : ''}">${daysTxt}</div>`;
     row.querySelector('.repaso-name').textContent = it.name;
     row.onclick = () => { toggleTopicToday(it.id, it.block); renderRepasos(); };
+    cont.appendChild(row);
+  });
+}
+
+// ============ Mi plan semanal ============
+const BLOCK_INFO = {
+  'Bloque 1': 'Organización del Estado',
+  'Bloque 2': 'Fundamentos y SSOO',
+  'Bloque 3': 'Desarrollo de software',
+  'Bloque 4': 'Sistemas y redes',
+  'Repaso':   'Subnetting, Linux, protocolos, virtualización'
+};
+function openPlanSheet() { renderPlan(); document.getElementById('plan-backdrop').classList.add('active'); }
+function closePlanSheet() { document.getElementById('plan-backdrop').classList.remove('active'); }
+function renderPlan() {
+  const cont = document.getElementById('plan-list');
+  cont.innerHTML = '';
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const names = { 1:'Lunes', 2:'Martes', 3:'Miércoles', 4:'Jueves', 5:'Viernes', 6:'Sábado', 0:'Domingo' };
+  const todayDay = new Date().getDay();
+  order.forEach(day => {
+    const block = blockForDay(day);
+    const row = document.createElement('div');
+    row.className = 'plan-row' + (day === todayDay ? ' today' : '');
+    row.innerHTML = `
+      <div class="plan-day"></div>
+      <div class="plan-block"><div class="b"></div><div class="c">${BLOCK_INFO[block] || ''}</div></div>`;
+    row.querySelector('.plan-day').textContent = names[day];
+    row.querySelector('.b').textContent = block;
     cont.appendChild(row);
   });
 }
