@@ -165,6 +165,8 @@
   }
   .cal-day.empty { visibility: hidden; }
   .cal-day.today { background: var(--bg-elevated); font-weight: 700; }
+  .cal-day.exam { outline: 2px solid var(--danger); outline-offset: -2px; }
+  .exam-mark { font-size: 11px; line-height: 8px; }
   .cal-day .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-dot); }
   .cal-day .dot.completado { background: var(--green); }
   .cal-day .dot.parcial { background: var(--yellow); }
@@ -325,6 +327,7 @@
     <span><i class="dot" style="background:var(--green)"></i>Completado</span>
     <span><i class="dot" style="background:var(--yellow)"></i>Parcial</span>
     <span><i class="dot" style="background:var(--gray-dot)"></i>Sin empezar</span>
+    <span>🎯 Examen</span>
   </div>
 </section>
 
@@ -497,7 +500,7 @@ try {
 }
 
 // ============ Estado en memoria ============
-let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '', topics: {} };
+let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '', topics: {}, session: null };
 const logs = () => state.logs;
 
 // ============ Persistencia ============
@@ -520,9 +523,11 @@ function subscribeCloud() {
       state.examDate = d.examDate || '';
       state.examStart = d.examStart || '';
       state.topics = d.topics || {};
+      state.session = d.session || null;
       remoteReady = true;
       showSync('Sincronizado ✓', true);
       renderAll();
+      onSessionUpdate();
     },
     err => { console.error(err); showSync('Sin conexión'); }
   );
@@ -926,9 +931,10 @@ function renderCalendar() {
     const date = new Date(year, month, d);
     const key = keyOf(date);
     const status = statusOf(logs()[key]);
+    const isExam = state.examDate === key;
     const cell = document.createElement('div');
-    cell.className = 'cal-day' + (key === todayKey ? ' today' : '');
-    cell.innerHTML = `<span>${d}</span><span class="dot ${status}"></span>`;
+    cell.className = 'cal-day' + (key === todayKey ? ' today' : '') + (isExam ? ' exam' : '');
+    cell.innerHTML = `<span>${d}</span>` + (isExam ? '<span class="exam-mark">🎯</span>' : `<span class="dot ${status}"></span>`);
     cell.onclick = () => openDayDetail(date);
     grid.appendChild(cell);
   }
@@ -940,7 +946,8 @@ function openDayDetail(date) {
   const day = logs()[key] || emptyDay();
   document.getElementById('day-detail-title').textContent =
     `${WEEKDAYS[date.getDay()].charAt(0).toUpperCase()+WEEKDAYS[date.getDay()].slice(1)} ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
-  document.getElementById('day-detail-block').textContent = 'Tocaba: ' + blockFor(date);
+  document.getElementById('day-detail-block').textContent =
+    (state.examDate === key) ? '🎯 Día del examen' : ('Tocaba: ' + blockFor(date));
   const cont = document.getElementById('day-detail-tasks');
   cont.innerHTML = '';
   TASKS.forEach(t => {
@@ -1097,7 +1104,7 @@ function renderPlan() {
 }
 
 // ============ TEMPORIZADOR (Pomodoro con descansos) ============
-let phases = [], phaseIdx = 0, remaining = 0, timerInterval = null, wakeLock = null, audioCtx = null;
+let timerInterval = null, wakeLock = null, audioCtx = null, lastPhaseIdx = -1;
 
 // Construye la secuencia: bloques de 20 min de estudio con descansos de 5 min entre medias.
 function buildPhases(studyMin) {
@@ -1114,64 +1121,96 @@ function buildPhases(studyMin) {
 function openTimerSheet() { document.getElementById('timer-backdrop').classList.add('active'); }
 function closeTimerSheet() { document.getElementById('timer-backdrop').classList.remove('active'); }
 
+// Arranca una sesión: guarda los tramos con hora de fin ABSOLUTA en la nube,
+// así cualquier dispositivo reconstruye el mismo cronómetro al abrir la app.
 function startPomodoro(studyMin) {
   closeTimerSheet();
-  unlockAudio();     // desbloquea el sonido (requiere gesto del usuario)
-  requestWake();     // mantiene la pantalla encendida
-  phases = buildPhases(studyMin);
-  phaseIdx = 0;
-  startPhase();
-  document.getElementById('mini-timer').classList.add('active');
+  unlockAudio();
+  requestWake();
+  let t = Date.now();
+  const segments = buildPhases(studyMin).map(p => { t += p.secs * 1000; return { type: p.type, end: t }; });
+  state.session = { start: Date.now(), sMin: studyMin, segments };
+  lastPhaseIdx = -1;
+  pushToCloud({ session: state.session });
+  onSessionUpdate();
 }
-function startPhase() {
-  remaining = phases[phaseIdx].secs;
-  updatePhaseUI();
-  clearInterval(timerInterval);
-  timerInterval = setInterval(tick, 1000);
+
+// Dado el estado guardado y la hora actual, calcula fase y tiempo restante.
+function computeSession(session, now) {
+  const segs = session.segments || [];
+  const idx = segs.findIndex(s => s.end > now);
+  if (idx === -1) return { finished: true };
+  return { finished: false, idx, seg: segs[idx], remaining: Math.max(0, Math.round((segs[idx].end - now) / 1000)) };
 }
-function tick() {
-  remaining--;
-  updateCountdownDisplay();
-  if (remaining <= 0) {
-    clearInterval(timerInterval);
-    phaseIdx++;
-    if (phaseIdx >= phases.length) { finishTimer(); return; }
-    beep(phases[phaseIdx].type);   // avisa de la fase que empieza
-    startPhase();
+
+// Se llama al arrancar y cada vez que llega un cambio desde la nube (onSnapshot).
+function onSessionUpdate() {
+  if (state.session && state.session.segments) {
+    if (computeSession(state.session, Date.now()).finished) {
+      state.session = null;      // sesión ya caducada: limpiar sin avisar
+      pushToCloud({ session: null });
+      hideMiniTimer();
+      return;
+    }
+    document.getElementById('mini-timer').classList.add('active');
+    requestWake();
+    if (!timerInterval) timerInterval = setInterval(tickSync, 250);
+    tickSync();
+  } else {
+    hideMiniTimer();
   }
 }
-function updatePhaseUI() {
-  const p = phases[phaseIdx];
-  const totalWork = phases.filter(x => x.type === 'work').length;
-  const workDone = phases.slice(0, phaseIdx + 1).filter(x => x.type === 'work').length;
-  document.getElementById('mini-phase').textContent = p.type === 'work' ? '📖' : '☕';
-  document.getElementById('mini-sub').textContent = p.type === 'work' ? `Estudio ${workDone}/${totalWork}` : 'Descanso';
-  document.getElementById('mini-timer').style.background = p.type === 'work' ? 'var(--accent)' : 'var(--orange)';
-  updateCountdownDisplay();
+function hideMiniTimer() {
+  document.getElementById('mini-timer').classList.remove('active');
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  lastPhaseIdx = -1;
+  releaseWake();
 }
-function updateCountdownDisplay() {
-  const m = Math.floor(remaining / 60), s = remaining % 60;
+
+function tickSync() {
+  if (!state.session || !state.session.segments) { hideMiniTimer(); return; }
+  const st = computeSession(state.session, Date.now());
+  if (st.finished) {
+    const sMin = state.session.sMin;
+    const wasWatching = lastPhaseIdx !== -1;
+    state.session = null;
+    pushToCloud({ session: null });
+    hideMiniTimer();
+    if (wasWatching) {
+      beep('finish');
+      document.getElementById('done-msg').textContent = `Buen trabajo. Has completado ${sMin} minutos de estudio.`;
+      document.getElementById('done-backdrop').classList.add('active');
+    }
+    return;
+  }
+  if (lastPhaseIdx !== -1 && st.idx !== lastPhaseIdx) beep(st.seg.type);
+  lastPhaseIdx = st.idx;
+  const segs = state.session.segments;
+  const totalWork = segs.filter(s => s.type === 'work').length;
+  const workDone = segs.slice(0, st.idx + 1).filter(s => s.type === 'work').length;
+  document.getElementById('mini-phase').textContent = st.seg.type === 'work' ? '📖' : '☕';
+  document.getElementById('mini-sub').textContent = st.seg.type === 'work' ? `Estudio ${workDone}/${totalWork}` : 'Descanso';
+  document.getElementById('mini-timer').style.background = st.seg.type === 'work' ? 'var(--accent)' : 'var(--orange)';
+  const m = Math.floor(st.remaining / 60), s = st.remaining % 60;
   document.getElementById('mini-time').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
+
+// Saltar la fase actual: acorta este tramo y adelanta los siguientes (se sincroniza).
 function skipPhase() {
-  clearInterval(timerInterval);
-  phaseIdx++;
-  if (phaseIdx >= phases.length) { finishTimer(); return; }
-  startPhase();
+  if (!state.session || !state.session.segments) return;
+  const now = Date.now();
+  const st = computeSession(state.session, now);
+  if (st.finished) return;
+  const segs = state.session.segments;
+  const delta = segs[st.idx].end - now;
+  for (let j = st.idx; j < segs.length; j++) segs[j].end -= delta;
+  pushToCloud({ session: state.session });
+  onSessionUpdate();
 }
 function stopTimer() {
-  clearInterval(timerInterval); timerInterval = null;
-  releaseWake();
-  document.getElementById('mini-timer').classList.remove('active');
-}
-function finishTimer() {
-  clearInterval(timerInterval); timerInterval = null;
-  releaseWake();
-  beep('finish');
-  document.getElementById('mini-timer').classList.remove('active');
-  const workMin = phases.filter(x => x.type === 'work').reduce((a, b) => a + b.secs, 0) / 60;
-  document.getElementById('done-msg').textContent = `Buen trabajo. Has completado ${workMin} minutos de estudio.`;
-  document.getElementById('done-backdrop').classList.add('active');
+  state.session = null;
+  pushToCloud({ session: null });
+  hideMiniTimer();
 }
 function closeDone() { document.getElementById('done-backdrop').classList.remove('active'); }
 
