@@ -89,6 +89,17 @@
   .exam-bar { height: 8px; background: var(--gray-dot); border-radius: 4px; overflow: hidden; }
   .exam-fill { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; transition: width 0.4s ease; }
   .exam-date { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+  .block-suggest { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+  .topic-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--separator); cursor: pointer; }
+  .topic-row:last-child { border-bottom: none; }
+  .topic-info { min-width: 0; }
+  .topic-name { font-size: 16px; }
+  .topic-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .topic-check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--gray-dot); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .topic-check svg { width: 15px; height: 15px; opacity: 0; }
+  .topic-row.done .topic-check { background: var(--green); border-color: var(--green); }
+  .topic-row.done .topic-check svg { opacity: 1; }
+  .topic-row.done .topic-name { color: var(--text-secondary); }
 
   .section-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 4px; }
   .checklist { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--separator); }
@@ -244,10 +255,11 @@
     <div class="exam-date" id="exam-date-text">Toca para fijar la fecha del examen</div>
   </div>
 
-  <div class="block-card">
+  <div class="block-card" onclick="openTopicsSheet()">
     <div>
       <div class="label">Toca estudiar</div>
       <div class="value" id="hoy-block">—</div>
+      <div class="block-suggest" id="hoy-suggest">Toca para ver los temas</div>
     </div>
     <div class="block-emoji" id="hoy-block-emoji">📘</div>
   </div>
@@ -258,7 +270,8 @@
   <button class="btn-secondary" onclick="goToTest()">🔗 Ir al test</button>
   <a class="link-edit" onclick="editTestUrl()">Cambiar enlace del test</a>
 
-  <button class="btn-primary" onclick="openTimerSheet()">▶︎ Empezar sesión</button>
+  <button class="btn-primary" onclick="startPomodoro(20)">⏱ Repaso rápido 20 min</button>
+  <button class="btn-primary" onclick="openTimerSheet()" style="background:var(--bg-elevated);color:var(--accent);margin-top:12px;">▶︎ Sesión con descansos</button>
 </section>
 
 <!-- ==================== CALENDARIO ==================== -->
@@ -346,11 +359,12 @@
 
 <div class="sheet-backdrop center-mode" id="timer-backdrop" onclick="if(event.target===this)closeTimerSheet()">
   <div class="sheet centered">
-    <h2>Empezar sesión</h2>
+    <h2>Sesión con descansos</h2>
+    <div class="countdown-sub" style="margin-bottom:14px;">Estudias en bloques de 20 min con descansos de 5 min. Elige el tiempo total de estudio:</div>
     <div class="timer-options">
-      <button class="timer-opt" onclick="startTimer(25)">25 minutos</button>
-      <button class="timer-opt" onclick="startTimer(50)">50 minutos</button>
-      <button class="timer-opt" onclick="startTimer(90)">90 minutos</button>
+      <button class="timer-opt" onclick="startPomodoro(25)">25 minutos</button>
+      <button class="timer-opt" onclick="startPomodoro(50)">50 minutos</button>
+      <button class="timer-opt" onclick="startPomodoro(90)">90 minutos</button>
     </div>
     <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:14px;" onclick="closeTimerSheet()">Cancelar</button>
   </div>
@@ -358,9 +372,13 @@
 
 <div class="sheet-backdrop center-mode" id="countdown-backdrop">
   <div class="sheet centered">
-    <div class="countdown-sub" id="countdown-label">Sesión de 25 min</div>
-    <div class="countdown-time" id="countdown-time">25:00</div>
-    <button class="btn-stop" onclick="stopTimer()">Terminar</button>
+    <div class="countdown-sub" id="countdown-phase">📖 Estudio</div>
+    <div class="countdown-time" id="countdown-time">20:00</div>
+    <div class="countdown-sub" id="countdown-progress" style="margin-bottom:20px;">Bloque de estudio 1</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-cancel" onclick="skipPhase()" style="flex:1;padding:15px;border-radius:12px;font-size:17px;font-weight:600;">Saltar</button>
+      <button class="btn-stop" onclick="stopTimer()" style="flex:1;">Terminar</button>
+    </div>
   </div>
 </div>
 
@@ -379,6 +397,15 @@
     <div id="day-detail-block" class="countdown-sub" style="margin-top:-8px;"></div>
     <div id="day-detail-tasks"></div>
     <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closeDayDetail()">Cerrar</button>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="topics-backdrop" onclick="if(event.target===this)closeTopicsSheet()">
+  <div class="sheet">
+    <h2 id="topics-title">Temas del bloque</h2>
+    <div id="topics-suggest" class="countdown-sub" style="margin-top:-8px;"></div>
+    <div id="topics-list"></div>
+    <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closeTopicsSheet()">Cerrar</button>
   </div>
 </div>
 
@@ -412,7 +439,7 @@ try {
 }
 
 // ============ Estado en memoria ============
-let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '' };
+let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '', topics: {} };
 const logs = () => state.logs;
 
 // ============ Persistencia ============
@@ -434,6 +461,7 @@ function subscribeCloud() {
       state.testUrl = d.testUrl || '';
       state.examDate = d.examDate || '';
       state.examStart = d.examStart || '';
+      state.topics = d.topics || {};
       remoteReady = true;
       showSync('Sincronizado ✓', true);
       renderAll();
@@ -507,6 +535,13 @@ function renderHoy() {
   const block = blockFor(now);
   document.getElementById('hoy-block').textContent = block;
   document.getElementById('hoy-block-emoji').textContent = block === 'Práctica' ? '📝' : '📘';
+
+  const topicList = TOPICS[block] || [];
+  const sug = suggestReview(block);
+  const suggestEl = document.getElementById('hoy-suggest');
+  if (topicList.length === 0) suggestEl.textContent = 'Día de práctica · toca para ver';
+  else if (sug) suggestEl.textContent = `Repaso sugerido: ${sug.name} (hace ${sug.days} d.) · toca`;
+  else suggestEl.textContent = 'Toca para marcar el tema que estudies';
 
   renderExam(now);
 
@@ -597,6 +632,180 @@ function saveExamDate() {
   closeExamSheet();
   renderHoy();
   pushToCloud({ examDate: state.examDate, examStart: state.examStart });
+}
+
+// ============ Temas por bloque y seguimiento de repasos ============
+const TOPICS = {
+  'Bloque 1': [
+    {id:'B1-T1',   name:'T1 · Constitución'},
+    {id:'B1-T2',   name:'T2 · Las Cortes'},
+    {id:'B1-T3',   name:'T3 · El Gobierno'},
+    {id:'B1-T4.1', name:'T4.1 · TREBEP'},
+    {id:'B1-T4.2', name:'T4.2 · Ley de Transparencia'},
+    {id:'B1-T4.3', name:'T4.3 · Agenda 2030 y ODS'},
+    {id:'B1-T5',   name:'T5 · Igualdad, discapacidad, dependencia'},
+    {id:'B1-T6.1', name:'T6.1 · Sociedad de la Información'},
+    {id:'B1-T6.2', name:'T6.2 · Agenda Digital 2026'},
+    {id:'B1-T7',   name:'T7 · Protección de Datos'},
+    {id:'B1-T8',   name:'T8 · Acceso electrónico, ENS, ENI'},
+    {id:'B1-T9.1', name:'T9.1 · Instrumentos de acceso'},
+    {id:'B1-T9.2', name:'T9.2 · Servicios comunes'}
+  ],
+  'Bloque 2': [
+    {id:'B2-T1',     name:'T1 · Informática básica'},
+    {id:'B2-T2',     name:'T2 · Periféricos'},
+    {id:'B2-T3',     name:'T3 · EEDD y algoritmos'},
+    {id:'B2-T4.1',   name:'T4.1 · SSOO'},
+    {id:'B2-T4.2.1', name:'T4.2.1 · Windows y móviles'},
+    {id:'B2-T4.2.2', name:'T4.2.2 · Windows – Comandos'},
+    {id:'B2-T4.2.3', name:'T4.2.3 · Windows – PowerShell 1'},
+    {id:'B2-T4.2.4', name:'T4.2.4 · Windows – PowerShell 2'},
+    {id:'B2-T4.2.5', name:'T4.2.5 · Windows – PowerShell 3'},
+    {id:'B2-T4.3.1', name:'T4.3.1 · Linux'},
+    {id:'B2-T4.3.2', name:'T4.3.2 · Linux – Comandos'},
+    {id:'B2-T4.3.3', name:'T4.3.3 · Linux – Ficheros'},
+    {id:'B2-T4.3.4', name:'T4.3.4 · Linux – IPTables'},
+    {id:'B2-T5',     name:'T5 · NoSQL'}
+  ],
+  'Bloque 3': [
+    {id:'B3-T1.1',   name:'T1.1 · Entidad-Relación / DFD'},
+    {id:'B3-T1.2',   name:'T1.2 · Diseño BBDD'},
+    {id:'B3-T2',     name:'T2 · Lenguajes'},
+    {id:'B3-T3',     name:'T3 · SQL'},
+    {id:'B3-T4.1.1', name:'T4.1.1 · Patrones'},
+    {id:'B3-T4.1.2', name:'T4.1.2 · Patrones – SOLID'},
+    {id:'B3-T4.2',   name:'T4.2 · UML'},
+    {id:'B3-T5.1',   name:'T5.1 · Java'},
+    {id:'B3-T5.2',   name:'T5.2 · Arquitectura JEE'},
+    {id:'B3-T5.3',   name:'T5.3 · .NET'},
+    {id:'B3-T6',     name:'T6 · Servicios Web'},
+    {id:'B3-T7.1.1', name:'T7.1.1 · HTML'},
+    {id:'B3-T7.1.2', name:'T7.1.2 · HTML – Cheatsheet lite'},
+    {id:'B3-T7.1.3', name:'T7.1.3 · HTML – Cheatsheet'},
+    {id:'B3-T7.2.1', name:'T7.2.1 · CSS'},
+    {id:'B3-T7.2.2', name:'T7.2.2 · CSS – Cheatsheet lite'},
+    {id:'B3-T7.2.3', name:'T7.2.3 · CSS – Cheatsheet'},
+    {id:'B3-T7.3.1', name:'T7.3.1 · XML'},
+    {id:'B3-T7.3.2', name:'T7.3.2 · XML – Bien formado'},
+    {id:'B3-T7.4a',  name:'T7.4 · Scripting Front'},
+    {id:'B3-T7.4b',  name:'T7.4 · Scripting Front – Cheatsheet'},
+    {id:'B3-T7.5',   name:'T7.5 · Scripting Back'},
+    {id:'B3-T8',     name:'T8 · Accesibilidad'},
+    {id:'B3-T9',     name:'T9 · Metodologías y versionado'}
+  ],
+  'Bloque 4': [
+    {id:'B4-T1.1',   name:'T1.1 · Admon SSOO'},
+    {id:'B4-T1.2',   name:'T1.2 · Admon SSOO – SSH'},
+    {id:'B4-T1.3',   name:'T1.3 · Admon SSOO – Apache'},
+    {id:'B4-T1.4',   name:'T1.4 · Admon SSOO – Ansible'},
+    {id:'B4-T1.5',   name:'T1.5 · Admon SSOO – SaltStack'},
+    {id:'B4-T2.1',   name:'T2.1 · Admon BBDD'},
+    {id:'B4-T2.2',   name:'T2.2 · Admon BBDD – SGBD'},
+    {id:'B4-T2.3',   name:'T2.3 · Admon BBDD – Comparativa'},
+    {id:'B4-T3.1',   name:'T3.1 · Correo'},
+    {id:'B4-T3.2.1', name:'T3.2.1 · Virtualización'},
+    {id:'B4-T3.2.2', name:'T3.2.2 · Virtualización – Docker'},
+    {id:'B4-T3.3',   name:'T3.3 · Microservicios'},
+    {id:'B4-T4',     name:'T4 · Admon Redes'},
+    {id:'B4-T5',     name:'T5 · Seguridad SI y CPD'},
+    {id:'B4-T6.1',   name:'T6.1 · Redes de conmutación'},
+    {id:'B4-T6.2',   name:'T6.2 · Redes móviles'},
+    {id:'B4-T7.1',   name:'T7.1 · TCP/IP'},
+    {id:'B4-T7.2',   name:'T7.2 · TCP/IP – Protocolos'},
+    {id:'B4-T7.3a',  name:'T7.3 · TCP/IP – Libro alumno'},
+    {id:'B4-T7.3b',  name:'T7.3 · TCP/IP – Libro profesor'},
+    {id:'B4-T8',     name:'T8 · HTTP, SSL, TLS'},
+    {id:'B4-T9',     name:'T9 · Seguridad en redes y VPN'},
+    {id:'B4-T10',    name:'T10 · Redes LAN'}
+  ],
+  'Práctica': []
+};
+
+function daysSince(dateStr) {
+  const d = parseDMY(dateStr);
+  const now = new Date();
+  const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((t0 - d) / 86400000);
+}
+function topicDates(id) {
+  const rec = state.topics[id];
+  return rec && rec.dates ? rec.dates : [];
+}
+function lastStudied(id) {
+  const dates = topicDates(id);
+  return dates.length ? dates.slice().sort().slice(-1)[0] : null;
+}
+// El tema que "toca repasar": el estudiado hace más tiempo dentro del bloque.
+function suggestReview(block) {
+  const list = TOPICS[block] || [];
+  let best = null;
+  list.forEach(t => {
+    const last = lastStudied(t.id);
+    if (last) {
+      const ds = daysSince(last);
+      if (!best || ds > best.days) best = { name: t.name, days: ds };
+    }
+  });
+  return best;
+}
+
+let topicsBlock = null;
+function openTopicsSheet() {
+  const block = blockFor(new Date());
+  topicsBlock = block;
+  document.getElementById('topics-title').textContent = 'Temas de ' + block;
+  renderTopicsSuggest(block);
+  renderTopicsList(block);
+  document.getElementById('topics-backdrop').classList.add('active');
+}
+function closeTopicsSheet() { document.getElementById('topics-backdrop').classList.remove('active'); }
+function renderTopicsSuggest(block) {
+  const el = document.getElementById('topics-suggest');
+  const list = TOPICS[block] || [];
+  if (list.length === 0) { el.textContent = 'Día de práctica: no hay temas que marcar.'; return; }
+  const sug = suggestReview(block);
+  el.textContent = sug ? `📌 Toca repasar: ${sug.name} (hace ${sug.days} día${sug.days===1?'':'s'})`
+                       : 'Marca el tema que estudies hoy para empezar a contabilizar los repasos.';
+}
+function renderTopicsList(block) {
+  const cont = document.getElementById('topics-list');
+  cont.innerHTML = '';
+  const list = TOPICS[block] || [];
+  if (list.length === 0) {
+    cont.innerHTML = '<div class="empty-state" style="margin-top:20px;">Los domingos toca práctica libre.</div>';
+    return;
+  }
+  const todayKey = keyOf(new Date());
+  list.forEach(t => {
+    const dates = topicDates(t.id);
+    const studiedToday = dates.includes(todayKey);
+    const last = lastStudied(t.id);
+    let sub;
+    if (!last) sub = 'Nunca estudiado';
+    else {
+      const ds = daysSince(last);
+      sub = (ds === 0 ? 'Estudiado hoy' : `Hace ${ds} día${ds===1?'':'s'}`) + ` · ${dates.length}×`;
+    }
+    const row = document.createElement('div');
+    row.className = 'topic-row' + (studiedToday ? ' done' : '');
+    row.innerHTML = `
+      <div class="topic-info"><div class="topic-name"></div><div class="topic-sub">${sub}</div></div>
+      <div class="topic-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></div>`;
+    row.querySelector('.topic-name').textContent = t.name;
+    row.onclick = () => toggleTopicToday(t.id, block);
+    cont.appendChild(row);
+  });
+}
+function toggleTopicToday(id, block) {
+  const todayKey = keyOf(new Date());
+  if (!state.topics[id]) state.topics[id] = { dates: [] };
+  const dates = state.topics[id].dates;
+  const i = dates.indexOf(todayKey);
+  if (i >= 0) dates.splice(i, 1); else dates.push(todayKey);
+  renderTopicsSuggest(block);
+  renderTopicsList(block);
+  renderHoy();
+  pushToCloud({ topics: state.topics });
 }
 
 // ============ Enlace del test ============
@@ -744,39 +953,120 @@ function renderStats() {
   document.getElementById('stat-month').textContent = count;
 }
 
-// ============ TEMPORIZADOR ============
-let timerInterval = null, remaining = 0, sessionMinutes = 0;
+// ============ TEMPORIZADOR (Pomodoro con descansos) ============
+let phases = [], phaseIdx = 0, remaining = 0, timerInterval = null, wakeLock = null, audioCtx = null;
+
+// Construye la secuencia: bloques de 20 min de estudio con descansos de 5 min entre medias.
+function buildPhases(studyMin) {
+  const list = [];
+  let rem = studyMin;
+  while (rem > 0) {
+    const chunk = Math.min(20, rem);
+    list.push({ type: 'work', secs: chunk * 60 });
+    rem -= chunk;
+    if (rem > 0) list.push({ type: 'break', secs: 5 * 60 });
+  }
+  return list;
+}
 function openTimerSheet() { document.getElementById('timer-backdrop').classList.add('active'); }
 function closeTimerSheet() { document.getElementById('timer-backdrop').classList.remove('active'); }
-function startTimer(minutes) {
+
+function startPomodoro(studyMin) {
   closeTimerSheet();
-  sessionMinutes = minutes;
-  remaining = minutes * 60;
-  document.getElementById('countdown-label').textContent = `Sesión de ${minutes} min`;
-  updateCountdownDisplay();
+  unlockAudio();     // desbloquea el sonido (requiere gesto del usuario)
+  requestWake();     // mantiene la pantalla encendida
+  phases = buildPhases(studyMin);
+  phaseIdx = 0;
+  startPhase();
   document.getElementById('countdown-backdrop').classList.add('active');
+}
+function startPhase() {
+  remaining = phases[phaseIdx].secs;
+  updatePhaseUI();
+  clearInterval(timerInterval);
   timerInterval = setInterval(tick, 1000);
 }
 function tick() {
   remaining--;
   updateCountdownDisplay();
-  if (remaining <= 0) finishTimer();
+  if (remaining <= 0) {
+    clearInterval(timerInterval);
+    phaseIdx++;
+    if (phaseIdx >= phases.length) { finishTimer(); return; }
+    beep(phases[phaseIdx].type);   // avisa de la fase que empieza
+    startPhase();
+  }
+}
+function updatePhaseUI() {
+  const p = phases[phaseIdx];
+  const totalWork = phases.filter(x => x.type === 'work').length;
+  const workDone = phases.slice(0, phaseIdx + 1).filter(x => x.type === 'work').length;
+  document.getElementById('countdown-phase').textContent = p.type === 'work' ? '📖 Estudio' : '☕ Descanso';
+  document.getElementById('countdown-progress').textContent = p.type === 'work'
+    ? `Bloque de estudio ${workDone} de ${totalWork}`
+    : 'Descanso de 5 minutos';
+  updateCountdownDisplay();
 }
 function updateCountdownDisplay() {
   const m = Math.floor(remaining / 60), s = remaining % 60;
   document.getElementById('countdown-time').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
+function skipPhase() {
+  clearInterval(timerInterval);
+  phaseIdx++;
+  if (phaseIdx >= phases.length) { finishTimer(); return; }
+  startPhase();
+}
 function stopTimer() {
   clearInterval(timerInterval); timerInterval = null;
+  releaseWake();
   document.getElementById('countdown-backdrop').classList.remove('active');
 }
 function finishTimer() {
   clearInterval(timerInterval); timerInterval = null;
+  releaseWake();
+  beep('finish');
   document.getElementById('countdown-backdrop').classList.remove('active');
-  document.getElementById('done-msg').textContent = `Buen trabajo. Has completado tu sesión de ${sessionMinutes} minutos.`;
+  const workMin = phases.filter(x => x.type === 'work').reduce((a, b) => a + b.secs, 0) / 60;
+  document.getElementById('done-msg').textContent = `Buen trabajo. Has completado ${workMin} minutos de estudio.`;
   document.getElementById('done-backdrop').classList.add('active');
 }
 function closeDone() { document.getElementById('done-backdrop').classList.remove('active'); }
+
+// --- Alarma sonora (Web Audio, sin archivos externos) + vibración ---
+function unlockAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+function beep(kind) {
+  try {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const times = kind === 'finish' ? [0, 0.25, 0.5, 0.75] : kind === 'work' ? [0, 0.2, 0.4] : [0, 0.2];
+    const freq = kind === 'break' ? 660 : 880;
+    times.forEach(t => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.exponentialRampToValueAtTime(0.4, now + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.18);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now + t); osc.stop(now + t + 0.2);
+    });
+  } catch (e) {}
+  if (navigator.vibrate) navigator.vibrate(kind === 'finish' ? [200, 100, 200] : 200);
+}
+// --- Mantener la pantalla encendida durante la sesión ---
+async function requestWake() {
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+}
+function releaseWake() {
+  try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {}
+}
 
 // ============ Init ============
 renderHoy();       // pinta ya con estado vacío
