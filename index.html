@@ -18,6 +18,7 @@
     --accent: #007aff;
     --green: #34c759;
     --yellow: #ffcc00;
+    --orange: #ff9500;
     --gray-dot: #d1d1d6;
     --tabbar: rgba(249,249,249,0.94);
     --danger: #ff3b30;
@@ -35,6 +36,7 @@
       --accent: #0a84ff;
       --green: #30d158;
       --yellow: #ffd60a;
+      --orange: #ff9f0a;
       --gray-dot: #48484a;
       --tabbar: rgba(22,22,22,0.94);
       --danger: #ff453a;
@@ -634,6 +636,14 @@ function renderExam(now) {
   else if (total <= 0) pct = 0;
   else pct = Math.min(100, Math.max(0, ((total - daysLeft) / total) * 100));
   fillEl.style.width = pct + '%';
+
+  // Color tipo semáforo según lo cerca que esté el examen.
+  let color;
+  if (daysLeft <= 7) color = 'var(--danger)';        // última semana: rojo
+  else if (daysLeft <= 30) color = 'var(--orange)';  // último mes: naranja
+  else if (daysLeft <= 90) color = 'var(--yellow)';  // últimos 3 meses: amarillo
+  else color = 'var(--green)';                       // aún queda mucho: verde
+  fillEl.style.background = color;
 
   textEl.textContent = daysLeft < 0
     ? `Examen (aprox.): ${examLabel} · toca para cambiar`
