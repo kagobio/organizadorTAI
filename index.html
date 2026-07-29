@@ -80,6 +80,16 @@
   .block-card .value { font-size: 24px; font-weight: 700; margin-top: 2px; }
   .block-emoji { font-size: 30px; }
 
+  /* ---- Cuenta atrás examen ---- */
+  .exam-card { background: var(--bg-elevated); border-radius: 16px; padding: 16px 20px; margin: 18px 0 4px; }
+  .exam-card:active { opacity: 0.7; }
+  .exam-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .exam-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .exam-days { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .exam-bar { height: 8px; background: var(--gray-dot); border-radius: 4px; overflow: hidden; }
+  .exam-fill { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; transition: width 0.4s ease; }
+  .exam-date { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+
   .section-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 4px; }
   .checklist { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--separator); }
   .check-row {
@@ -225,6 +235,15 @@
     <div class="today-date" id="hoy-date">—</div>
   </div>
 
+  <div class="exam-card" onclick="openExamSheet()">
+    <div class="exam-top">
+      <span class="exam-label">Faltan para el examen</span>
+      <span class="exam-days" id="exam-days">—</span>
+    </div>
+    <div class="exam-bar"><div class="exam-fill" id="exam-fill"></div></div>
+    <div class="exam-date" id="exam-date-text">Toca para fijar la fecha del examen</div>
+  </div>
+
   <div class="block-card">
     <div>
       <div class="label">Toca estudiar</div>
@@ -313,6 +332,18 @@
   </div>
 </div>
 
+<div class="sheet-backdrop center-mode" id="exam-backdrop" onclick="if(event.target===this)closeExamSheet()">
+  <div class="sheet centered">
+    <h2>Fecha del examen</h2>
+    <div class="countdown-sub" style="margin-bottom:16px;">Es aproximada, puedes cambiarla cuando quieras.</div>
+    <div class="field"><input id="exam-input" type="date"></div>
+    <div class="sheet-buttons">
+      <button class="btn-cancel" onclick="closeExamSheet()">Cancelar</button>
+      <button class="btn-save" onclick="saveExamDate()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="sheet-backdrop center-mode" id="timer-backdrop" onclick="if(event.target===this)closeTimerSheet()">
   <div class="sheet centered">
     <h2>Empezar sesión</h2>
@@ -381,7 +412,7 @@ try {
 }
 
 // ============ Estado en memoria ============
-let state = { logs: {}, notes: [], testUrl: '' };
+let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '' };
 const logs = () => state.logs;
 
 // ============ Persistencia ============
@@ -401,6 +432,8 @@ function subscribeCloud() {
       state.logs = d.logs || {};
       state.notes = d.notes || [];
       state.testUrl = d.testUrl || '';
+      state.examDate = d.examDate || '';
+      state.examStart = d.examStart || '';
       remoteReady = true;
       showSync('Sincronizado ✓', true);
       renderAll();
@@ -475,6 +508,8 @@ function renderHoy() {
   document.getElementById('hoy-block').textContent = block;
   document.getElementById('hoy-block-emoji').textContent = block === 'Práctica' ? '📝' : '📘';
 
+  renderExam(now);
+
   const key = keyOf(now);
   const day = logs()[key] || emptyDay();
   const list = document.getElementById('hoy-checklist');
@@ -497,6 +532,71 @@ function toggleTask(taskKey) {
   renderHoy();
   // Guarda solo el día modificado (notación de campo anidado).
   pushToCloud({ logs: { [key]: state.logs[key] } });
+}
+
+// ============ Cuenta atrás del examen ============
+function parseDMY(str) {
+  // str = "YYYY-MM-DD" -> Date local a medianoche
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function renderExam(now) {
+  const daysEl = document.getElementById('exam-days');
+  const fillEl = document.getElementById('exam-fill');
+  const textEl = document.getElementById('exam-date-text');
+
+  if (!state.examDate) {
+    daysEl.textContent = '—';
+    fillEl.style.width = '0%';
+    textEl.textContent = 'Toca para fijar la fecha del examen';
+    return;
+  }
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const exam = parseDMY(state.examDate);
+  const MS = 86400000;
+  const daysLeft = Math.round((exam - today) / MS);
+
+  const examLabel = `${exam.getDate()} de ${MONTHS[exam.getMonth()]} de ${exam.getFullYear()}`;
+
+  if (daysLeft > 1) {
+    daysEl.textContent = `${daysLeft} días`;
+  } else if (daysLeft === 1) {
+    daysEl.textContent = '1 día';
+  } else if (daysLeft === 0) {
+    daysEl.textContent = '¡Hoy!';
+  } else {
+    daysEl.textContent = 'Pasado';
+  }
+
+  // Barra: progreso desde que fijaste la fecha hasta el examen.
+  const start = state.examStart ? parseDMY(state.examStart) : today;
+  const total = (exam - start) / MS;
+  let pct;
+  if (daysLeft <= 0) pct = 100;
+  else if (total <= 0) pct = 0;
+  else pct = Math.min(100, Math.max(0, ((total - daysLeft) / total) * 100));
+  fillEl.style.width = pct + '%';
+
+  textEl.textContent = daysLeft < 0
+    ? `Examen (aprox.): ${examLabel} · toca para cambiar`
+    : `Examen aprox.: ${examLabel} · toca para cambiar`;
+}
+function openExamSheet() {
+  document.getElementById('exam-input').value = state.examDate || '';
+  document.getElementById('exam-backdrop').classList.add('active');
+}
+function closeExamSheet() { document.getElementById('exam-backdrop').classList.remove('active'); }
+function saveExamDate() {
+  const val = document.getElementById('exam-input').value;
+  if (!val) { alert('Elige una fecha.'); return; }
+  state.examDate = val;
+  // Guarda el momento en que se fija (para la barra de progreso), solo si es nueva.
+  const todayKey = keyOf(new Date());
+  if (!state.examStart) state.examStart = todayKey;
+  closeExamSheet();
+  renderHoy();
+  pushToCloud({ examDate: state.examDate, examStart: state.examStart });
 }
 
 // ============ Enlace del test ============
