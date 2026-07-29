@@ -290,7 +290,7 @@
   <div class="section-label">Tareas de hoy</div>
   <div class="checklist" id="hoy-checklist"></div>
 
-  <button class="btn-secondary" onclick="goToTest()">🔗 Ir al test</button>
+  <button class="btn-secondary" id="test-btn" onclick="goToTest()">🔗 Ir al test</button>
   <a class="link-edit" onclick="editTestUrl()">Cambiar enlace del test</a>
 
   <button class="btn-primary" onclick="startPomodoro(20)">⏱ Repaso rápido 20 min</button>
@@ -589,6 +589,9 @@ function renderHoy() {
   else if (sug) suggestEl.textContent = `Repaso sugerido: ${sug.name} (hace ${sug.days} d.) · toca`;
   else suggestEl.textContent = 'Toca para marcar el tema que estudies';
 
+  document.getElementById('test-btn').textContent =
+    block === 'Repaso' ? '🐧 Practicar Linux en Debian' : '🔗 Ir al test';
+
   renderExam(now);
 
   const key = keyOf(now);
@@ -868,7 +871,10 @@ function toggleTopicToday(id, block) {
 }
 
 // ============ Enlace del test ============
+// Enlace fijo para el domingo (repaso de Linux en una Debian online).
+const SUNDAY_URL = 'https://distrosea.com/es/start/debian-13.0.0-standard/';
 function goToTest() {
+  if (blockFor(new Date()) === 'Repaso') { window.open(SUNDAY_URL, '_blank'); return; }
   if (!state.testUrl) { editTestUrl(); return; }
   window.open(state.testUrl, '_blank');
 }
