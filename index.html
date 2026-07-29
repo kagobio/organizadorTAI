@@ -224,6 +224,12 @@
   .complete-stats > div { flex: 1; background: var(--bg-elevated); border-radius: 14px; padding: 16px 8px; }
   .cs-num { font-size: 34px; font-weight: 700; letter-spacing: -1px; }
   .cs-lbl { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .complete-info { background: var(--bg-elevated); border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; text-align: left; }
+  .ci-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; margin-bottom: 4px; }
+  .ci-row b { font-size: 16px; }
+  .ci-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 8px; }
+  .ci-topics { font-size: 14px; margin-top: 3px; }
+  .ocr-status { font-size: 13px; color: var(--accent); margin-top: 8px; }
 
   /* ---- Tab bar ---- */
   .tabbar {
@@ -418,6 +424,7 @@
         <button type="button" class="attach-btn" onclick="document.getElementById('attach-input').click()">📎 Adjuntar captura</button>
         <div class="attach-hint">o pega con Ctrl+V · o arrastra la imagen aquí</div>
       </div>
+      <div id="ocr-status" class="ocr-status" style="display:none;"></div>
     </div>
     <div class="sheet-buttons">
       <button class="btn-cancel" onclick="closeNoteSheet()">Cancelar</button>
@@ -475,6 +482,11 @@
     <div class="complete-stats">
       <div><div class="cs-num" id="complete-streak">0</div><div class="cs-lbl">🔥 Días seguidos</div></div>
       <div><div class="cs-num" id="complete-month">0</div><div class="cs-lbl">✅ Este mes</div></div>
+    </div>
+    <div class="complete-info">
+      <div class="ci-row"><span>⏱️ Tiempo estudiado hoy</span><b id="complete-time">0 min</b></div>
+      <div class="ci-label">📚 Temas de hoy</div>
+      <div class="ci-topics" id="complete-topics">—</div>
     </div>
     <button class="btn-save" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;" onclick="closeComplete()">¡Genial!</button>
   </div>
@@ -1048,8 +1060,36 @@ function resizeImage(file, maxDim = 1200, quality = 0.6) {
 }
 function addImageFile(file) {
   resizeImage(file)
-    .then(dataURL => { pendingImages.push({ dataURL, isNew: true }); renderAttachments(); })
+    .then(dataURL => { pendingImages.push({ dataURL, isNew: true }); renderAttachments(); runOCR(dataURL); })
     .catch(() => alert('No se pudo procesar la imagen.'));
+}
+// OCR: extrae el texto de la captura y lo añade a la nota (Tesseract.js, cargado bajo demanda).
+let tesseractLoading = null;
+function ensureTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  if (tesseractLoading) return tesseractLoading;
+  tesseractLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return tesseractLoading;
+}
+function runOCR(dataURL) {
+  const status = document.getElementById('ocr-status');
+  if (status) { status.style.display = 'block'; status.textContent = '🔍 Extrayendo texto de la imagen…'; }
+  ensureTesseract()
+    .then(() => Tesseract.recognize(dataURL, 'spa'))
+    .then(({ data }) => {
+      const text = (data.text || '').replace(/\n{3,}/g, '\n\n').trim();
+      if (status) status.style.display = 'none';
+      if (text) {
+        const ta = document.getElementById('note-body');
+        ta.value = (ta.value ? ta.value.trim() + '\n\n' : '') + text;
+      }
+    })
+    .catch(() => { if (status) { status.textContent = 'No se pudo extraer el texto automáticamente.'; setTimeout(() => status.style.display = 'none', 2500); } });
 }
 // Cada imagen se guarda en su propio documento: estudio_tai/img_<id>
 function loadImage(id) {
@@ -1155,6 +1195,7 @@ function openNoteSheet(id) {
   pendingImages = (n && n.images ? n.images : []).map(imgId => ({ id: imgId, dataURL: null, isNew: false }));
   renderAttachments();
   pendingImages.forEach(p => { if (p.id) loadImage(p.id).then(url => { p.dataURL = url; renderAttachments(); }); });
+  const os = document.getElementById('ocr-status'); if (os) os.style.display = 'none';
   document.getElementById('note-backdrop').classList.add('active');
 }
 function closeNoteSheet() { document.getElementById('note-backdrop').classList.remove('active'); }
@@ -1217,9 +1258,52 @@ function renderStats() {
   document.getElementById('stat-streak').textContent = computeStreak();
   document.getElementById('stat-month').textContent = monthCompleted();
 }
+function topicNameById(id) {
+  for (const b of Object.keys(TOPICS)) { const t = TOPICS[b].find(x => x.id === id); if (t) return t.name; }
+  return id;
+}
+function topicsStudiedOn(dayKey) {
+  return Object.keys(state.topics).filter(id => (state.topics[id].dates || []).includes(dayKey)).map(topicNameById);
+}
+// Segundos de estudio (solo tramos 'work') transcurridos hasta 'now'.
+function studiedSeconds(session, now) {
+  let s = 0;
+  session.segments.forEach((seg, i) => {
+    if (seg.type !== 'work') return;
+    const start = i === 0 ? session.start : session.segments[i - 1].end;
+    s += Math.max(0, Math.min(now, seg.end) - start);
+  });
+  return Math.round(s / 1000);
+}
+function studiedSecondsToday() {
+  const key = keyOf(new Date());
+  const base = (state.logs[key] && state.logs[key].secs) || 0;
+  const live = state.session ? studiedSeconds(state.session, Date.now()) : 0;
+  return base + live;
+}
+function formatDuration(secs) {
+  const m = Math.round(secs / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60), mm = m % 60;
+  return mm ? `${h} h ${mm} min` : `${h} h`;
+}
+// Acumula el tiempo estudiado en el día al terminar/parar una sesión.
+function recordStudyTime(session, endNow) {
+  if (!session || !session.segments) return;
+  const secs = studiedSeconds(session, endNow);
+  if (secs <= 0) return;
+  const key = keyOf(new Date());
+  if (!state.logs[key]) state.logs[key] = emptyDay();
+  state.logs[key].secs = ((state.logs[key].secs) || 0) + secs;
+  pushToCloud({ logs: { [key]: state.logs[key] } });
+}
 function showDayComplete() {
   document.getElementById('complete-streak').textContent = computeStreak();
   document.getElementById('complete-month').textContent = monthCompleted();
+  const key = keyOf(new Date());
+  const temas = topicsStudiedOn(key);
+  document.getElementById('complete-topics').textContent = temas.length ? temas.join(' · ') : 'No has marcado temas hoy';
+  document.getElementById('complete-time').textContent = formatDuration(studiedSecondsToday());
   document.getElementById('complete-backdrop').classList.add('active');
   beep('finish');
 }
@@ -1332,6 +1416,7 @@ function computeSession(session, now) {
 function onSessionUpdate() {
   if (state.session && state.session.segments) {
     if (computeSession(state.session, Date.now()).finished) {
+      recordStudyTime(state.session, Date.now());
       state.session = null;      // sesión ya caducada: limpiar sin avisar
       saveSessionLocal();
       pushToCloud({ session: null });
@@ -1359,6 +1444,7 @@ function tickSync() {
   if (st.finished) {
     const sMin = state.session.sMin;
     const wasWatching = lastPhaseIdx !== -1;
+    recordStudyTime(state.session, Date.now());
     state.session = null;
     saveSessionLocal();
     pushToCloud({ session: null });
@@ -1396,6 +1482,7 @@ function skipPhase() {
   onSessionUpdate();
 }
 function stopTimer() {
+  if (state.session) recordStudyTime(state.session, Date.now());
   state.session = null;
   saveSessionLocal();
   pushToCloud({ session: null });
