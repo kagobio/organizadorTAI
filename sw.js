@@ -1,6 +1,6 @@
 // Service worker mínimo: cachea el "esqueleto" de la app para que funcione sin conexión.
-const CACHE = 'estudio-tai-v1';
-const ASSETS = ['./', './index.html', './icon-512.png', './manifest.webmanifest'];
+const CACHE = 'estudio-tai-v2';
+const ASSETS = ['./', './index.html', './icon-192.png', './icon-512.png', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
