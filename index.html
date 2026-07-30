@@ -208,6 +208,21 @@
   .note-thumb.loading { opacity: 0.4; }
   .image-viewer { max-width: 94vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
 
+  /* ---- Mini-ventana del cronómetro ---- */
+  #mini-view { display: none; }
+  body.mini { padding: 0; }
+  body.mini > *:not(#mini-view) { display: none !important; }
+  body.mini #mini-view {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; gap: 8px; padding: 16px; text-align: center;
+  }
+  #mini-view-phase { font-size: 15px; color: var(--text-secondary); font-weight: 600; }
+  #mini-view-time { font-size: 15vw; font-weight: 200; letter-spacing: -2px; font-variant-numeric: tabular-nums; line-height: 1; }
+  #mini-view-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+  #mini-view-controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  #mini-view-controls button { background: var(--bg-elevated); color: var(--accent); font-size: 16px; font-weight: 600; padding: 10px 16px; border-radius: 10px; min-width: 52px; }
+  #mini-view-controls button:active { opacity: 0.7; }
+
   .fab {
     position: fixed; right: 20px; bottom: calc(76px + var(--safe-bottom));
     width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff;
@@ -364,6 +379,7 @@
 
   <button class="btn-primary" onclick="startPomodoro(20)">⏱ Repaso rápido 20 min</button>
   <button class="btn-primary" onclick="openTimerSheet()" style="background:var(--bg-elevated);color:var(--accent);margin-top:12px;">▶︎ Sesión con descansos</button>
+  <a class="link-edit" onclick="openMiniWindow()">🪟 Abrir mini-ventana del cronómetro</a>
 </section>
 
 <!-- ==================== CALENDARIO ==================== -->
@@ -564,6 +580,14 @@
     <div id="plan-list"></div>
     <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closePlanSheet()">Cerrar</button>
   </div>
+</div>
+
+<!-- ==================== MINI-VENTANA DEL CRONÓMETRO ==================== -->
+<div id="mini-view">
+  <div id="mini-view-phase">⏱️ Cronómetro</div>
+  <div id="mini-view-time">--:--</div>
+  <div id="mini-view-sub"></div>
+  <div id="mini-view-controls"></div>
 </div>
 
 <!-- ==================== FIREBASE SDK (compat) ==================== -->
@@ -1517,6 +1541,7 @@ function onSessionUpdate() {
     }
     document.getElementById('mini-timer').classList.add('active');
     requestWake();
+    renderMini();
     if (!timerInterval) timerInterval = setInterval(tickSync, 250);
     tickSync();
   } else {
@@ -1528,6 +1553,7 @@ function hideMiniTimer() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   lastPhaseIdx = -1;
   releaseWake();
+  renderMini();
 }
 
 function tickSync() {
@@ -1557,7 +1583,13 @@ function tickSync() {
   document.getElementById('mini-sub').textContent = st.seg.type === 'work' ? `Estudio ${workDone}/${totalWork}` : 'Descanso';
   document.getElementById('mini-timer').style.background = st.seg.type === 'work' ? 'var(--accent)' : 'var(--orange)';
   const m = Math.floor(st.remaining / 60), s = st.remaining % 60;
-  document.getElementById('mini-time').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const mmss = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('mini-time').textContent = mmss;
+  if (document.body.classList.contains('mini')) {
+    document.getElementById('mini-view-phase').textContent = st.seg.type === 'work' ? '📖 Estudio' : '☕ Descanso';
+    document.getElementById('mini-view-sub').textContent = st.seg.type === 'work' ? `Bloque ${workDone}/${totalWork}` : 'Descanso de 5 min';
+    document.getElementById('mini-view-time').textContent = mmss;
+  }
   updateTodayTime();
 }
 
@@ -1606,6 +1638,31 @@ function stopTimer() {
   pushToCloud({ session: null });
   hideMiniTimer();
 }
+// Abre una ventana pequeña con solo el cronómetro (sincronizada con el resto).
+function openMiniWindow() {
+  window.open(location.pathname + '#mini', 'pomodoroMini', 'width=340,height=300,menubar=no,toolbar=no,location=no,status=no');
+}
+// Dibuja los botones de la mini-ventana según haya sesión o no.
+function renderMini() {
+  if (!document.body.classList.contains('mini')) return;
+  const controls = document.getElementById('mini-view-controls');
+  const running = state.session && state.session.segments && !computeSession(state.session, Date.now()).finished;
+  if (running) {
+    controls.innerHTML =
+      '<button onclick="adjustTimer(30)">−30s</button>' +
+      '<button onclick="skipPhase()">Saltar</button>' +
+      '<button onclick="stopTimer()">Terminar</button>';
+  } else {
+    document.getElementById('mini-view-phase').textContent = '⏱️ Cronómetro';
+    document.getElementById('mini-view-time').textContent = '--:--';
+    document.getElementById('mini-view-sub').textContent = 'Elige minutos de estudio';
+    controls.innerHTML =
+      '<button onclick="startPomodoro(20)">20</button>' +
+      '<button onclick="startPomodoro(25)">25</button>' +
+      '<button onclick="startPomodoro(50)">50</button>' +
+      '<button onclick="startPomodoro(90)">90</button>';
+  }
+}
 function closeDone() { document.getElementById('done-backdrop').classList.remove('active'); }
 
 // --- Alarma sonora (Web Audio, sin archivos externos) + vibración ---
@@ -1644,6 +1701,8 @@ function releaseWake() {
 }
 
 // ============ Init ============
+// Modo mini-ventana: solo el cronómetro (se activa con #mini en la URL).
+if (location.hash === '#mini' || new URLSearchParams(location.search).has('mini')) document.body.classList.add('mini');
 renderHoy();       // pinta ya con estado vacío
 // Restaura el cronómetro al instante desde el navegador (por si refrescas),
 // antes incluso de que responda Firestore.
