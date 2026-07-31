@@ -97,7 +97,7 @@
   .block-suggest { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
   .topic-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--separator); cursor: pointer; }
   .topic-row:last-child { border-bottom: none; }
-  .topic-info { min-width: 0; }
+  .topic-info { min-width: 0; flex: 1; }
   .topic-name { font-size: 16px; }
   .topic-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
   .topic-check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--gray-dot); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
@@ -105,6 +105,21 @@
   .topic-row.done .topic-check { background: var(--green); border-color: var(--green); }
   .topic-row.done .topic-check svg { opacity: 1; }
   .topic-row.done .topic-name { color: var(--text-secondary); }
+  .topic-ficha { background: var(--bg-elevated); border: 1px solid var(--separator); border-radius: 8px; font-size: 16px; padding: 5px 9px; flex-shrink: 0; cursor: pointer; line-height: 1; }
+  .topic-ficha:active { opacity: 0.6; }
+
+  /* ---- Fichas de estudio ---- */
+  .ficha-label { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-secondary); margin: 16px 0 8px; }
+  .ficha-scheme { margin: 0; padding-left: 0; list-style: none; }
+  .ficha-scheme > li { padding-left: 17px; position: relative; margin: 5px 0; }
+  .ficha-scheme > li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: 12px; top: 3px; }
+  .ficha-scheme .st { font-weight: 600; }
+  .ficha-scheme ul { list-style: none; margin: 4px 0 6px; padding-left: 16px; }
+  .ficha-scheme ul li { position: relative; padding-left: 14px; color: var(--text-secondary); font-size: 14px; margin: 3px 0; }
+  .ficha-scheme ul li::before { content: '–'; position: absolute; left: 0; }
+  .ficha-resumen { font-size: 15px; line-height: 1.55; margin: 0; }
+  .ficha-key { background: var(--bg-elevated); border-radius: 12px; padding: 12px 14px; }
+  .ficha-key .k { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 13px; margin: 5px 0; color: var(--text); }
 
   /* ---- Repasos ---- */
   .repaso-hint { font-size: 14px; color: var(--text-secondary); margin: 0 4px 16px; }
@@ -573,6 +588,14 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="ficha-backdrop" onclick="if(event.target===this)closeFicha()">
+  <div class="sheet">
+    <h2 id="ficha-title">Ficha</h2>
+    <div id="ficha-body"></div>
+    <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closeFicha()">Cerrar</button>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="plan-backdrop" onclick="if(event.target===this)closePlanSheet()">
   <div class="sheet">
     <h2>Mi plan semanal</h2>
@@ -1006,8 +1029,11 @@ function renderTopicsList(block) {
     row.className = 'topic-row' + (studiedToday ? ' done' : '');
     row.innerHTML = `
       <div class="topic-info"><div class="topic-name"></div><div class="topic-sub">${sub}</div></div>
+      ${FICHAS[t.id] ? '<button class="topic-ficha" title="Ver ficha">📄</button>' : ''}
       <div class="topic-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></div>`;
     row.querySelector('.topic-name').textContent = t.name;
+    const fichaBtn = row.querySelector('.topic-ficha');
+    if (fichaBtn) fichaBtn.onclick = (e) => { e.stopPropagation(); openFicha(t.id); };
     row.onclick = () => toggleTopicToday(t.id, block);
     cont.appendChild(row);
   });
@@ -1023,6 +1049,142 @@ function toggleTopicToday(id, block) {
   renderHoy();
   pushToCloud({ topics: state.topics });
 }
+
+// ============ Fichas de estudio (esquema + resumen + clave) ============
+const FICHAS = {
+  'B4-T1.1': {
+    esquema: [
+      { t: 'Usuarios y permisos', sub: ['/etc/passwd, /etc/shadow (contraseñas), /etc/group', 'Permisos rwx (usuario/grupo/otros): chmod, chown, chgrp', 'Especiales: SUID, SGID, sticky bit'] },
+      { t: 'Procesos y servicios', sub: ['ps, top/htop, kill, nice/renice', 'systemd: systemctl (start/stop/enable/status), units y targets (≈ runlevels)'] },
+      { t: 'Arranque', sub: ['BIOS/UEFI → GRUB → kernel → init/systemd'] },
+      { t: 'Tareas programadas', sub: ['cron/crontab, at, systemd timers'] },
+      { t: 'Registros (logs)', sub: ['/var/log, journalctl'] },
+      { t: 'Paquetes', sub: ['apt/dpkg (Debian), dnf/yum/rpm (RedHat)'] },
+      { t: 'Almacenamiento', sub: ['Particiones, LVM, ext4/XFS, montaje (mount, /etc/fstab)'] }
+    ],
+    resumen: 'Administrar un SO es gestionar usuarios y permisos, procesos, servicios, arranque, logs, paquetes y almacenamiento. Los permisos en octal suman r=4, w=2, x=1 (p. ej. 755 = rwxr-xr-x). systemd es el init moderno (units y targets); los logs se ven con journalctl y el gestor de paquetes cambia según la distribución.',
+    clave: ['chmod 750 fichero', 'chown usuario:grupo fichero', 'systemctl enable --now servicio', 'journalctl -u servicio -f', 'crontab -e · apt/dnf install · df -h']
+  },
+  'B4-T1.2': {
+    esquema: [
+      { t: 'Qué es', sub: ['Acceso remoto cifrado (sustituye a Telnet/rlogin, que iban en claro)'] },
+      { t: 'Puerto', sub: ['22/TCP'] },
+      { t: 'Autenticación', sub: ['Por contraseña', 'Por clave pública/privada: ssh-keygen → id_rsa/id_rsa.pub, authorized_keys, ssh-copy-id'] },
+      { t: 'Herramientas', sub: ['ssh (sesión), scp/sftp (copia de ficheros)'] },
+      { t: 'Config. servidor', sub: ['/etc/ssh/sshd_config: Port, PermitRootLogin, PasswordAuthentication'] },
+      { t: 'Túneles', sub: ['Reenvío de puertos local (-L) y remoto (-R), X11 forwarding'] }
+    ],
+    resumen: 'SSH da una sesión de administración cifrada sobre redes inseguras. Buenas prácticas: autenticación por clave (más segura que contraseña), deshabilitar el login de root y, si acaso, cambiar el puerto. También copia ficheros (scp/sftp) y crea túneles para asegurar otros protocolos.',
+    clave: ['ssh usuario@host', 'scp fichero usuario@host:/ruta', 'ssh-keygen -t ed25519', 'Endurecer: PermitRootLogin no, PasswordAuthentication no']
+  },
+  'B4-T1.3': {
+    esquema: [
+      { t: 'Servidor web', sub: ['HTTP/HTTPS · procesos apache2 (Debian) / httpd (RedHat)'] },
+      { t: 'Puertos', sub: ['80 (HTTP) / 443 (HTTPS)'] },
+      { t: 'Configuración', sub: ['Debian: /etc/apache2 (sites-available, sites-enabled, a2ensite, a2enmod)', 'RedHat: /etc/httpd/conf/httpd.conf'] },
+      { t: 'VirtualHosts', sub: ['Varios sitios en una misma IP/servidor'] },
+      { t: 'Módulos', sub: ['mod_ssl (HTTPS), mod_rewrite (reescritura URLs), mod_php'] },
+      { t: 'Otros', sub: ['MPM: prefork/worker/event · Logs: access_log, error_log · .htaccess'] }
+    ],
+    resumen: 'Apache atiende peticiones HTTP/HTTPS. Los VirtualHosts alojan varios sitios en un servidor; mod_ssl habilita HTTPS y mod_rewrite reescribe URLs. Su alternativa principal es Nginx (más eficiente con mucha concurrencia; Apache muy flexible con módulos y .htaccess).',
+    clave: ['Puertos 80/443 · alternativa: Nginx', 'a2ensite sitio · a2enmod ssl rewrite', 'systemctl reload apache2']
+  },
+  'B4-T1.4': {
+    esquema: [
+      { t: 'Qué es', sub: ['Gestión de configuración y automatización'] },
+      { t: 'Sin agente (agentless)', sub: ['Usa SSH, no instala software en los nodos'] },
+      { t: 'Modelo push', sub: ['El nodo de control empuja la configuración'] },
+      { t: 'Componentes', sub: ['Inventario (hosts)', 'Playbooks en YAML · tareas · módulos · roles'] },
+      { t: 'Idempotencia', sub: ['Ejecutar N veces deja el sistema en el mismo estado'] }
+    ],
+    resumen: 'Ansible automatiza la configuración de muchos servidores de forma declarativa e idempotente. Su gran ventaja es que no necesita agente: basta con SSH y Python en los nodos. Los playbooks se escriben en YAML, fáciles de leer.',
+    clave: ['ansible-playbook playbook.yml -i inventario', 'Lenguaje YAML · sin agente (SSH) · idempotente', 'Compara con: Puppet/Chef (con agente), SaltStack']
+  },
+  'B4-T1.5': {
+    esquema: [
+      { t: 'Qué es', sub: ['Gestión de configuración + ejecución remota a gran escala'] },
+      { t: 'Arquitectura', sub: ['master/minion (con agente); también salt-ssh (sin agente)'] },
+      { t: 'Comunicación', sub: ['Muy rápida (bus de mensajes ZeroMQ)'] },
+      { t: 'Elementos', sub: ['Estados en ficheros SLS (YAML + Jinja)', 'Grains (datos del minion) · Pillars (datos sensibles)'] }
+    ],
+    resumen: 'Salt gestiona la configuración de grandes infraestructuras y ejecuta órdenes en muchos nodos a la vez, con gran velocidad. Frente a Ansible: Salt suele usar agente (master/minion) y escala muy rápido; Ansible es sin agente y más simple de arrancar. Ambos usan YAML.',
+    clave: ["salt '*' test.ping", 'Estados .sls · grains / pillars', 'Master/minion (agente) vs Ansible (sin agente)']
+  },
+  'B4-T2.1': {
+    esquema: [
+      { t: 'Rol del DBA', sub: ['Administrador de la base de datos'] },
+      { t: 'Seguridad', sub: ['Usuarios, roles y privilegios (GRANT/REVOKE)'] },
+      { t: 'Copias de seguridad', sub: ['Lógicas (dump) y físicas · restauración'] },
+      { t: 'Rendimiento', sub: ['Tuning, índices, planes de ejecución'] },
+      { t: 'Integridad y concurrencia', sub: ['ACID, transacciones, bloqueos'] },
+      { t: 'Alta disponibilidad', sub: ['Replicación, clustering, failover'] }
+    ],
+    resumen: 'El DBA mantiene la BBDD sana: controla el acceso (permisos), garantiza copias y recuperación, optimiza el rendimiento (sobre todo con índices) y asegura integridad y disponibilidad. ACID = Atomicidad, Consistencia, Aislamiento (Isolation) y Durabilidad: las 4 garantías de una transacción fiable.',
+    clave: ['GRANT / REVOKE (privilegios)', 'Copias: mysqldump · pg_dump', 'Transacción: BEGIN … COMMIT / ROLLBACK · ACID']
+  },
+  'B4-T2.2': {
+    esquema: [
+      { t: 'Definición', sub: ['Software que crea, consulta, actualiza y administra las BBDD'] },
+      { t: 'Funciones', sub: ['Definición de datos, manipulación y control (seguridad, integridad, concurrencia, recuperación)'] },
+      { t: 'Lenguajes SQL', sub: ['DDL — definición: CREATE, ALTER, DROP', 'DML — manipulación: SELECT, INSERT, UPDATE, DELETE', 'DCL — control: GRANT, REVOKE', 'TCL — transacciones: COMMIT, ROLLBACK, SAVEPOINT'] },
+      { t: 'Modelos', sub: ['Relacional · NoSQL (clave-valor, documental, columnar, grafos) · jerárquico · red · orientado a objetos'] },
+      { t: 'Propiedades y componentes', sub: ['ACID · motor, diccionario de datos, gestor de transacciones/consultas'] }
+    ],
+    resumen: 'Un SGBD es la capa de software entre las aplicaciones y los datos: oculta el almacenamiento físico y garantiza integridad, seguridad y concurrencia. Ten muy claras las 4 familias del lenguaje SQL —DDL, DML, DCL y TCL—: es una pregunta clásica de test.',
+    clave: ['DDL (estructura) · DML (datos) · DCL (permisos) · TCL (transacciones)', 'Relacional (SQL) vs NoSQL (clave-valor, documental, columnar, grafos)']
+  },
+  'B4-T2.3': {
+    esquema: [
+      { t: 'MySQL / MariaDB', sub: ['Relacional · open source (GPL) · web, pila LAMP'] },
+      { t: 'PostgreSQL', sub: ['Relacional-objeto · open source · robusto y muy estándar; geoespacial (PostGIS)'] },
+      { t: 'Oracle', sub: ['Relacional · propietario · grandes empresas y sistemas críticos'] },
+      { t: 'SQL Server', sub: ['Relacional · propietario (Microsoft) · entornos Windows/.NET'] },
+      { t: 'SQLite', sub: ['Relacional · dominio público · embebido (móvil, apps ligeras, sin servidor)'] }
+    ],
+    resumen: 'La división clave es open source (MySQL/MariaDB, PostgreSQL) frente a propietario (Oracle, SQL Server). SQLite es especial: es embebido, no tiene servidor y guarda toda la BBDD en un único fichero, por eso se usa en móviles y aplicaciones ligeras.',
+    clave: ['Open source: MySQL/MariaDB, PostgreSQL', 'Propietario: Oracle, SQL Server', 'SQLite = embebido (sin servidor, un fichero)']
+  }
+};
+
+function openFicha(id) {
+  const f = FICHAS[id];
+  if (!f) return;
+  document.getElementById('ficha-title').textContent = topicNameById(id);
+  const body = document.getElementById('ficha-body');
+  body.innerHTML = '';
+  const label = txt => { const d = document.createElement('div'); d.className = 'ficha-label'; d.textContent = txt; body.appendChild(d); };
+
+  label('Esquema');
+  const ul = document.createElement('ul'); ul.className = 'ficha-scheme';
+  f.esquema.forEach(item => {
+    const li = document.createElement('li');
+    const st = document.createElement('span'); st.className = 'st'; st.textContent = item.t; li.appendChild(st);
+    if (item.sub && item.sub.length) {
+      const sub = document.createElement('ul');
+      item.sub.forEach(s => { const sli = document.createElement('li'); sli.textContent = s; sub.appendChild(sli); });
+      li.appendChild(sub);
+    }
+    ul.appendChild(li);
+  });
+  body.appendChild(ul);
+
+  label('Resumen funcional');
+  const p = document.createElement('p'); p.className = 'ficha-resumen'; p.textContent = f.resumen; body.appendChild(p);
+
+  if (f.clave && f.clave.length) {
+    label('Comandos / clave');
+    const box = document.createElement('div'); box.className = 'ficha-key';
+    f.clave.forEach(k => { const d = document.createElement('div'); d.className = 'k'; d.textContent = k; box.appendChild(d); });
+    body.appendChild(box);
+  }
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:12px;color:var(--text-secondary);margin-top:16px;';
+  note.textContent = 'Guía de estudio · verifica los detalles con tu temario oficial.';
+  body.appendChild(note);
+
+  document.getElementById('ficha-backdrop').classList.add('active');
+}
+function closeFicha() { document.getElementById('ficha-backdrop').classList.remove('active'); }
 
 // ============ Enlace del test ============
 // Enlace fijo para el domingo (repaso de Linux en una Debian online).
