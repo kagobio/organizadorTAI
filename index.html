@@ -535,6 +535,7 @@
     <span class="mini-sub" id="mini-sub">Estudio</span>
   </div>
   <div class="mini-actions">
+    <button id="mini-pause" onclick="togglePause()" title="Pausar / Reanudar">⏸</button>
     <button onclick="adjustTimer(30)" title="Adelantar 30 segundos">−30s</button>
     <button onclick="skipPhase()">Saltar</button>
     <button onclick="stopTimer()">Terminar</button>
@@ -2281,11 +2282,12 @@ function topicsStudiedOn(dayKey) {
 }
 // Segundos de estudio (solo tramos 'work') transcurridos hasta 'now'.
 function studiedSeconds(session, now) {
+  const eff = (session.pausedAt && session.pausedAt < now) ? session.pausedAt : now;  // no cuenta el tiempo en pausa
   let s = 0;
   session.segments.forEach((seg, i) => {
     if (seg.type !== 'work') return;
     const start = i === 0 ? session.start : session.segments[i - 1].end;
-    s += Math.max(0, Math.min(now, seg.end) - start);
+    s += Math.max(0, Math.min(eff, seg.end) - start);
   });
   return Math.round(s / 1000);
 }
@@ -2434,9 +2436,10 @@ function startPomodoro(studyMin) {
 // Dado el estado guardado y la hora actual, calcula fase y tiempo restante.
 function computeSession(session, now) {
   const segs = session.segments || [];
-  const idx = segs.findIndex(s => s.end > now);
+  const eff = (session.pausedAt && session.pausedAt < now) ? session.pausedAt : now;  // pausa: tiempo congelado
+  const idx = segs.findIndex(s => s.end > eff);
   if (idx === -1) return { finished: true };
-  return { finished: false, idx, seg: segs[idx], remaining: Math.max(0, Math.round((segs[idx].end - now) / 1000)) };
+  return { finished: false, idx, seg: segs[idx], remaining: Math.max(0, Math.round((segs[idx].end - eff) / 1000)) };
 }
 
 // Se llama al arrancar y cada vez que llega un cambio desde la nube (onSnapshot).
@@ -2490,15 +2493,18 @@ function tickSync() {
   const segs = state.session.segments;
   const totalWork = segs.filter(s => s.type === 'work').length;
   const workDone = segs.slice(0, st.idx + 1).filter(s => s.type === 'work').length;
+  const paused = !!state.session.pausedAt;
   document.getElementById('mini-phase').textContent = st.seg.type === 'work' ? '📖' : '☕';
-  document.getElementById('mini-sub').textContent = st.seg.type === 'work' ? `Estudio ${workDone}/${totalWork}` : 'Descanso';
-  document.getElementById('mini-timer').style.background = st.seg.type === 'work' ? 'var(--accent)' : 'var(--orange)';
+  document.getElementById('mini-sub').textContent = paused ? '⏸ Pausado' : (st.seg.type === 'work' ? `Estudio ${workDone}/${totalWork}` : 'Descanso');
+  const pauseBtn = document.getElementById('mini-pause');
+  if (pauseBtn) pauseBtn.textContent = paused ? '▶' : '⏸';
+  document.getElementById('mini-timer').style.background = paused ? 'var(--text-secondary)' : (st.seg.type === 'work' ? 'var(--accent)' : 'var(--orange)');
   const m = Math.floor(st.remaining / 60), s = st.remaining % 60;
   const mmss = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   document.getElementById('mini-time').textContent = mmss;
   if (document.body.classList.contains('mini')) {
-    document.getElementById('mini-view-phase').textContent = st.seg.type === 'work' ? '📖 Estudio' : '☕ Descanso';
-    document.getElementById('mini-view-sub').textContent = st.seg.type === 'work' ? `Bloque ${workDone}/${totalWork}` : 'Descanso de 5 min';
+    document.getElementById('mini-view-phase').textContent = paused ? '⏸ Pausado' : (st.seg.type === 'work' ? '📖 Estudio' : '☕ Descanso');
+    document.getElementById('mini-view-sub').textContent = paused ? 'Toca ▶ para reanudar' : (st.seg.type === 'work' ? `Bloque ${workDone}/${totalWork}` : 'Descanso de 5 min');
     document.getElementById('mini-view-time').textContent = mmss;
   }
   updateTodayTime();
@@ -2542,6 +2548,29 @@ function skipPhase() {
   pushToCloud({ session: state.session });
   onSessionUpdate();
 }
+// Pausa: congela el cronómetro guardando el instante (se sincroniza).
+function pauseTimer() {
+  if (!state.session || !state.session.segments || state.session.pausedAt) return;
+  state.session.pausedAt = Date.now();
+  saveSessionLocal();
+  pushToCloud({ session: state.session });
+  onSessionUpdate();
+}
+// Reanudar: desplaza los tramos por el tiempo que estuvo en pausa y quita la marca.
+function resumeTimer() {
+  if (!state.session || !state.session.pausedAt) return;
+  const delta = Date.now() - state.session.pausedAt;
+  state.session.start += delta;
+  state.session.segments.forEach(s => s.end += delta);
+  delete state.session.pausedAt;
+  saveSessionLocal();
+  if (docRef) docRef.update({ session: state.session }).catch(() => {});  // reemplaza (elimina pausedAt)
+  onSessionUpdate();
+}
+function togglePause() {
+  if (!state.session || !state.session.segments) return;
+  if (state.session.pausedAt) resumeTimer(); else pauseTimer();
+}
 function stopTimer() {
   if (state.session) recordStudyTime(state.session, Date.now());
   state.session = null;
@@ -2560,6 +2589,7 @@ function renderMini() {
   const running = state.session && state.session.segments && !computeSession(state.session, Date.now()).finished;
   if (running) {
     controls.innerHTML =
+      '<button onclick="togglePause()">' + (state.session.pausedAt ? '▶ Reanudar' : '⏸ Pausar') + '</button>' +
       '<button onclick="adjustTimer(30)">−30s</button>' +
       '<button onclick="skipPhase()">Saltar</button>' +
       '<button onclick="stopTimer()">Terminar</button>';
