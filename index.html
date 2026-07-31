@@ -1758,6 +1758,134 @@ Object.assign(FICHAS, {
   }
 });
 
+// Bloque 2 — Fundamentos, sistemas operativos y NoSQL.
+Object.assign(FICHAS, {
+  'B2-T1': {
+    esquema: [
+      { t: 'Hardware', sub: ['CPU: Unidad de Control + ALU + registros', 'Memoria: RAM (volátil), ROM · buses (datos, direcciones, control)', 'Placa base, chipset'] },
+      { t: 'Representación de la información', sub: ['Sistemas de numeración: binario, octal, decimal, hexadecimal', 'Bit y byte · códigos ASCII / Unicode', 'Álgebra de Boole y puertas lógicas (AND, OR, NOT)'] },
+      { t: 'Arquitectura', sub: ['Von Neumann (memoria única) vs Harvard (datos y programa separados)'] },
+      { t: 'Unidades', sub: ['bit → byte → KB → MB → GB → TB'] }
+    ],
+    resumen: 'La informática básica distingue hardware (CPU con Unidad de Control y ALU, memoria RAM/ROM, buses, placa base) y software. La información se representa en binario; conviene dominar los sistemas de numeración (binario, octal, hexadecimal) y las codificaciones (ASCII, Unicode). La lógica digital se basa en el álgebra de Boole y las puertas lógicas. La arquitectura clásica es la de Von Neumann, que guarda datos y programa en una misma memoria.',
+    clave: ['CPU = Unidad de Control + ALU + registros', 'Binario / octal / decimal / hexadecimal · ASCII/Unicode', 'Von Neumann vs Harvard', 'bit → byte → KB → MB → GB → TB']
+  },
+  'B2-T2': {
+    esquema: [
+      { t: 'Por función', sub: ['Entrada: teclado, ratón, escáner, micrófono', 'Salida: monitor, impresora, altavoces', 'Entrada/Salida: pantalla táctil, tarjeta de red', 'Almacenamiento: HDD, SSD, USB, óptico'] },
+      { t: 'Interfaces y puertos', sub: ['USB, HDMI, VGA/DisplayPort, Ethernet (RJ-45)', 'Inalámbricos: Bluetooth, WiFi'] },
+      { t: 'Impresoras', sub: ['Láser, inyección de tinta, matricial · resolución (ppp/dpi)'] }
+    ],
+    resumen: 'Los periféricos conectan el ordenador con el exterior y se clasifican por su función: de entrada (teclado, ratón, escáner), de salida (monitor, impresora), de entrada/salida (pantalla táctil, tarjeta de red) y de almacenamiento (HDD, SSD, USB). Se conectan por interfaces como USB, HDMI o Ethernet, o de forma inalámbrica (Bluetooth, WiFi). Entre las impresoras destacan la láser y la de inyección de tinta.',
+    clave: ['Entrada / salida / E-S / almacenamiento', 'Puertos: USB, HDMI, Ethernet (RJ-45)', 'Inalámbrico: Bluetooth, WiFi', 'Impresoras: láser vs inyección · dpi']
+  },
+  'B2-T3': {
+    esquema: [
+      { t: 'Estructuras de datos', sub: ['Array/vector, lista enlazada', 'Pila (LIFO), cola (FIFO)', 'Árbol, grafo, tabla hash'] },
+      { t: 'Algoritmos', sub: ['Concepto, diagramas de flujo y pseudocódigo', 'Complejidad (notación O): O(1), O(log n), O(n), O(n²)'] },
+      { t: 'Clásicos', sub: ['Ordenación: burbuja, quicksort, mergesort', 'Búsqueda: lineal y binaria', 'Recursividad'] }
+    ],
+    resumen: 'Las estructuras de datos organizan la información en memoria: arrays, listas enlazadas, pilas (último en entrar, primero en salir), colas (primero en entrar, primero en salir), árboles, grafos y tablas hash. Un algoritmo es una secuencia finita de pasos para resolver un problema; su eficiencia se mide con la notación O grande (O(1), O(n), O(log n)...). Son clásicos los algoritmos de ordenación (quicksort, mergesort) y de búsqueda (binaria sobre datos ordenados).',
+    clave: ['Pila = LIFO · Cola = FIFO', 'Árbol, grafo, tabla hash', 'Complejidad O(1), O(log n), O(n), O(n²)', 'Búsqueda binaria (datos ordenados)']
+  },
+  'B2-T4.1': {
+    esquema: [
+      { t: 'Funciones', sub: ['Gestión de procesos, memoria, ficheros, E/S y usuarios', 'Actúa de intermediario entre el hardware y las aplicaciones'] },
+      { t: 'Procesos', sub: ['Estados, planificador (scheduler), hilos', 'Interbloqueo (deadlock), concurrencia'] },
+      { t: 'Memoria', sub: ['Memoria virtual, paginación y segmentación'] },
+      { t: 'Ficheros', sub: ['Sistemas de ficheros: FAT32, NTFS (Windows), ext4/XFS (Linux)'] },
+      { t: 'Tipos y ejemplos', sub: ['Monousuario/multiusuario, monotarea/multitarea', 'Windows, Linux, macOS, Android, iOS'] }
+    ],
+    resumen: 'El sistema operativo gestiona los recursos del ordenador y hace de intermediario entre el hardware y las aplicaciones. Sus funciones clave son la gestión de procesos (con un planificador que reparte la CPU, cuidando la concurrencia y evitando interbloqueos), de memoria (memoria virtual mediante paginación o segmentación), de ficheros (con sistemas como NTFS o ext4) y de usuarios y E/S. Pueden ser mono/multiusuario y mono/multitarea.',
+    clave: ['Gestiona procesos, memoria, ficheros, E/S, usuarios', 'Planificador (scheduler) · deadlock · memoria virtual', 'Ficheros: FAT32/NTFS (Win) · ext4/XFS (Linux)', 'Mono/multiusuario · mono/multitarea']
+  },
+  'B2-T4.2.1': {
+    esquema: [
+      { t: 'Windows', sub: ['Núcleo NT · sistema de ficheros NTFS', 'Registro de Windows (base de datos de configuración)', 'Versiones cliente y servidor'] },
+      { t: 'Móviles', sub: ['Android (basado en Linux, de Google)', 'iOS (de Apple) · gestión de apps y permisos'] }
+    ],
+    resumen: 'Windows es el SO de escritorio de Microsoft, basado en el núcleo NT, con el sistema de ficheros NTFS y el Registro como almacén central de configuración. En el ámbito móvil dominan dos sistemas: Android (basado en el kernel Linux, desarrollado por Google, abierto) e iOS (de Apple, cerrado). Ambos gestionan aplicaciones con modelos de permisos y tiendas oficiales.',
+    clave: ['Windows: núcleo NT · NTFS · Registro', 'Android = Linux (Google) · iOS = Apple', 'Modelo de permisos y tiendas de apps']
+  },
+  'B2-T4.2.2': {
+    esquema: [{ t: 'Consola de comandos (cmd.exe)', sub: ['Gestión de ficheros y red desde la línea de comandos'] }],
+    resumen: 'Chuleta de comandos básicos de la consola de Windows (CMD).',
+    clave: ['dir · cd · cls · type', 'copy · move · del · md/mkdir · rd/rmdir', 'ipconfig · ping · tasklist · taskkill', 'chkdsk · sfc /scannow']
+  },
+  'B2-T4.2.3': {
+    esquema: [
+      { t: 'Qué es PowerShell', sub: ['Shell y lenguaje de scripting orientado a OBJETOS (no solo texto)'] },
+      { t: 'Cmdlets', sub: ['Estructura Verbo-Nombre: Get-, Set-, New-, Remove-', 'Ejemplos: Get-Process, Get-ChildItem, Set-Location'] },
+      { t: 'Ayuda', sub: ['Get-Help, Get-Command, Get-Member'] }
+    ],
+    resumen: 'PowerShell es el shell moderno de Windows: a diferencia de CMD, trabaja con objetos, no con texto plano. Sus comandos son cmdlets con la forma Verbo-Nombre (Get-Process, Get-ChildItem, Set-Location). Para descubrir y aprender se usan Get-Command (listar), Get-Help (ayuda) y Get-Member (ver propiedades y métodos de un objeto).',
+    clave: ['PowerShell = shell orientado a objetos', 'Cmdlets Verbo-Nombre: Get-Process, Get-ChildItem', 'Get-Help · Get-Command · Get-Member']
+  },
+  'B2-T4.2.4': {
+    esquema: [
+      { t: 'Pipeline de objetos', sub: ['El operador | pasa objetos (no texto) de un cmdlet a otro'] },
+      { t: 'Filtrado y selección', sub: ['Where-Object (filtra), Select-Object (elige columnas)', 'Sort-Object, ForEach-Object, Measure-Object'] }
+    ],
+    resumen: 'La fuerza de PowerShell está en el pipeline: el operador | encadena cmdlets pasando objetos completos. Así se puede filtrar con Where-Object, elegir propiedades con Select-Object, ordenar con Sort-Object, recorrer con ForEach-Object o contar/sumar con Measure-Object, combinándolos en una sola línea.',
+    clave: ['Pipeline: cmdlet | cmdlet (objetos)', 'Where-Object (filtrar) · Select-Object (columnas)', 'Sort-Object · ForEach-Object · Measure-Object', 'Ej.: Get-Process | Where-Object CPU -gt 100']
+  },
+  'B2-T4.2.5': {
+    esquema: [
+      { t: 'Scripting', sub: ['Variables ($var), operadores, tipos', 'Control: if/else, switch, for, foreach, while'] },
+      { t: 'Reutilización', sub: ['Funciones, scripts .ps1, módulos'] },
+      { t: 'Administración', sub: ['Gestión de servicios, procesos, usuarios, red; automatización de tareas'] }
+    ],
+    resumen: 'PowerShell también es un lenguaje de scripting completo: usa variables con $ (por ejemplo $ruta), estructuras de control (if/else, bucles for/foreach/while) y permite crear funciones, scripts .ps1 y módulos reutilizables. Es la herramienta estándar para automatizar la administración de Windows: servicios, procesos, usuarios, red y tareas repetitivas.',
+    clave: ['Variables $var · if/else · for/foreach/while', 'Funciones · scripts .ps1 · módulos', 'Automatización de administración (servicios, usuarios, red)']
+  },
+  'B2-T4.3.1': {
+    esquema: [
+      { t: 'Qué es', sub: ['Kernel Linux + herramientas GNU · software libre (GPL)'] },
+      { t: 'Distribuciones', sub: ['Debian/Ubuntu, Red Hat/Fedora/CentOS, SUSE, Arch'] },
+      { t: 'Filosofía', sub: ['"Todo es un fichero" · multiusuario y multitarea', 'Shell (bash) como interfaz'] },
+      { t: 'Estructura de directorios (FHS)', sub: ['/ (raíz), /home, /etc (config), /var, /bin, /usr, /root, /tmp'] }
+    ],
+    resumen: 'Linux es un núcleo de sistema operativo libre que, unido a las herramientas GNU, forma un SO completo distribuido en distintas versiones (Debian, Ubuntu, Red Hat, Fedora...). Es multiusuario y multitarea y sigue la filosofía de que "todo es un fichero". Su jerarquía de directorios está normalizada (FHS): / es la raíz, /home los usuarios, /etc la configuración, /var los datos variables, /bin los binarios. La shell habitual es bash.',
+    clave: ['Kernel Linux + GNU · software libre (GPL)', 'Distros: Debian/Ubuntu, RedHat/Fedora, SUSE', 'FHS: / /home /etc /var /bin /usr /root', 'Shell: bash · "todo es un fichero"']
+  },
+  'B2-T4.3.2': {
+    esquema: [{ t: 'Comandos básicos', sub: ['Navegación, ficheros, permisos, procesos y paquetes'] }],
+    resumen: 'Chuleta de los comandos básicos de la terminal de Linux (bash).',
+    clave: ['ls · cd · pwd · cat · less · man', 'cp · mv · rm · mkdir · find · grep', 'chmod · chown · sudo · ps · top · kill', 'apt/dnf install · tar · nano/vi']
+  },
+  'B2-T4.3.3': {
+    esquema: [
+      { t: 'Sistema de ficheros', sub: ['Jerarquía FHS · tipos ext4, XFS, Btrfs'] },
+      { t: 'Permisos', sub: ['rwx para usuario/grupo/otros · propietario y grupo', 'chmod (octal 755), chown, umask'] },
+      { t: 'Enlaces e inodos', sub: ['Enlace duro (mismo inodo) vs simbólico (ln -s)', 'El inodo guarda los metadatos del fichero'] },
+      { t: 'Montaje', sub: ['mount, /etc/fstab, particiones'] }
+    ],
+    resumen: 'En Linux el sistema de ficheros sigue la jerarquía FHS y usa formatos como ext4 o XFS. Cada fichero tiene un propietario y un grupo, y permisos rwx para usuario/grupo/otros (gestionados con chmod, chown y umask). Los inodos almacenan los metadatos; existen enlaces duros (apuntan al mismo inodo) y simbólicos (ln -s, apuntan a una ruta). Los dispositivos se integran montándolos (mount, /etc/fstab).',
+    clave: ['Permisos rwx (usuario/grupo/otros) · chmod 755', 'Propietario/grupo · chown · umask', 'Enlace duro (inodo) vs simbólico (ln -s)', 'Montaje: mount · /etc/fstab · ext4/XFS']
+  },
+  'B2-T4.3.4': {
+    esquema: [
+      { t: 'Qué es', sub: ['Cortafuegos de Linux (front-end de netfilter en el kernel)'] },
+      { t: 'Tablas', sub: ['filter (filtrado), nat (traducción), mangle'] },
+      { t: 'Cadenas', sub: ['INPUT (entrante), OUTPUT (saliente), FORWARD (reenvío)'] },
+      { t: 'Políticas y acciones', sub: ['ACCEPT, DROP (descarta), REJECT'] },
+      { t: 'Evolución', sub: ['Sustituido por nftables; firewalld como gestor'] }
+    ],
+    resumen: 'iptables es la herramienta clásica para configurar el cortafuegos de Linux, que actúa sobre netfilter (en el kernel). Organiza las reglas en tablas (filter para filtrar, nat para traducir direcciones) y cadenas según el sentido del tráfico: INPUT (entrante), OUTPUT (saliente) y FORWARD (que atraviesa). Cada regla decide una acción: ACCEPT, DROP o REJECT. Hoy tiende a sustituirse por nftables, y firewalld facilita su gestión.',
+    clave: ['iptables → netfilter (kernel)', 'Tablas: filter, nat, mangle', 'Cadenas: INPUT, OUTPUT, FORWARD', 'Acciones: ACCEPT / DROP / REJECT · sucesor: nftables']
+  },
+  'B2-T5': {
+    esquema: [
+      { t: 'Qué es', sub: ['Bases de datos NO relacionales · esquema flexible, escalado horizontal'] },
+      { t: 'Tipos', sub: ['Clave-valor (Redis), documental (MongoDB)', 'Columnar (Cassandra), grafos (Neo4j)'] },
+      { t: 'Teorema CAP', sub: ['Consistencia, Disponibilidad, tolerancia a Particiones: solo 2 de 3'] },
+      { t: 'Modelo', sub: ['BASE (disponibilidad y consistencia eventual) frente a ACID'] }
+    ],
+    resumen: 'Las bases de datos NoSQL renuncian al modelo relacional estricto para ganar flexibilidad de esquema y escalabilidad horizontal, muy útiles en big data y aplicaciones web. Hay cuatro tipos principales: clave-valor (Redis), documental (MongoDB), columnar (Cassandra) y de grafos (Neo4j). El teorema CAP indica que un sistema distribuido solo puede garantizar dos de tres propiedades (Consistencia, Disponibilidad, tolerancia a Particiones); muchas NoSQL siguen el modelo BASE (consistencia eventual) en lugar de ACID.',
+    clave: ['NoSQL: esquema flexible + escalado horizontal', 'Tipos: clave-valor, documental, columnar, grafos', 'MongoDB · Redis · Cassandra · Neo4j', 'Teorema CAP (2 de 3) · BASE vs ACID']
+  }
+});
+
 function openFicha(id) {
   const f = FICHAS[id];
   if (!f) return;
