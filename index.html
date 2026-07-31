@@ -1146,6 +1146,258 @@ const FICHAS = {
   }
 };
 
+// Fichas ampliadas y resto del Bloque 4 (sobrescribe/añade sobre las básicas).
+Object.assign(FICHAS, {
+  'B4-T1.1': {
+    esquema: [
+      { t: 'Usuarios y permisos', sub: ['/etc/passwd, /etc/shadow (contraseñas cifradas), /etc/group', 'Permisos rwx (usuario/grupo/otros): chmod, chown, chgrp, umask', 'Especiales: SUID, SGID, sticky bit'] },
+      { t: 'Procesos y servicios', sub: ['ps, top/htop, kill, señales (SIGTERM/SIGKILL), nice/renice', 'systemd: systemctl (start/stop/enable/status), units, targets (≈ runlevels), journald'] },
+      { t: 'Arranque', sub: ['BIOS/UEFI → GRUB → kernel → init/systemd', 'Módulos del kernel: lsmod, modprobe'] },
+      { t: 'Shell y entorno', sub: ['bash/zsh, variables de entorno (PATH, $HOME), .bashrc', 'Redirecciones, tuberías (|), scripts'] },
+      { t: 'Tareas programadas', sub: ['cron/crontab, at, systemd timers'] },
+      { t: 'Logs', sub: ['/var/log, journalctl, syslog/rsyslog'] },
+      { t: 'Paquetes', sub: ['apt/dpkg (Debian/Ubuntu), dnf/yum/rpm (RedHat/Fedora), snap/flatpak'] },
+      { t: 'Almacenamiento', sub: ['Particiones, LVM, ext4/XFS/Btrfs, mount, /etc/fstab, RAID'] }
+    ],
+    resumen: 'Administrar un SO es gestionar usuarios y permisos, procesos, servicios, arranque, logs, paquetes y almacenamiento. Los permisos en octal suman r=4, w=2, x=1 (755 = rwxr-xr-x); umask define los permisos por defecto. systemd es el init moderno (units y targets) y unifica el arranque, los servicios y los logs (journald). El gestor de paquetes cambia según la familia de la distribución.',
+    clave: ['chmod 750 fichero · chown usuario:grupo fichero', 'systemctl enable --now servicio', 'journalctl -u servicio -f', 'ps aux · kill -9 PID · top', 'apt/dnf install · df -h · mount']
+  },
+  'B4-T1.2': {
+    esquema: [
+      { t: 'Qué es', sub: ['Acceso remoto cifrado (sustituye a Telnet/rlogin, en claro)', 'Cifrado simétrico para la sesión + asimétrico para el intercambio de claves'] },
+      { t: 'Puerto', sub: ['22/TCP'] },
+      { t: 'Autenticación', sub: ['Por contraseña', 'Por clave pública/privada: ssh-keygen → id_rsa/id_rsa.pub, authorized_keys, ssh-copy-id', 'ssh-agent (guarda la clave desbloqueada)'] },
+      { t: 'Confianza del host', sub: ['known_hosts, huella (fingerprint) del servidor'] },
+      { t: 'Herramientas', sub: ['ssh (sesión), scp/sftp (copia), rsync sobre ssh'] },
+      { t: 'Configuración', sub: ['Servidor: /etc/ssh/sshd_config (Port, PermitRootLogin, PasswordAuthentication)', 'Cliente: ~/.ssh/config'] },
+      { t: 'Túneles', sub: ['Reenvío de puertos local (-L) y remoto (-R), X11 forwarding'] }
+    ],
+    resumen: 'SSH da una sesión de administración cifrada sobre redes inseguras: intercambia claves de forma asimétrica y luego cifra la sesión de forma simétrica. Buenas prácticas: autenticación por clave (más segura que contraseña), deshabilitar el login de root y usar ssh-agent. Permite además copiar ficheros (scp/sftp/rsync) y crear túneles para asegurar otros protocolos.',
+    clave: ['ssh usuario@host · scp fichero usuario@host:/ruta', 'ssh-keygen -t ed25519 · ssh-copy-id usuario@host', 'Endurecer: PermitRootLogin no, PasswordAuthentication no', 'Túnel: ssh -L 8080:localhost:80 host']
+  },
+  'B4-T1.3': {
+    esquema: [
+      { t: 'Servidor web', sub: ['HTTP/HTTPS · procesos apache2 (Debian) / httpd (RedHat)', 'Soporta HTTP/1.1 y HTTP/2 (mod_http2)'] },
+      { t: 'Puertos', sub: ['80 (HTTP) / 443 (HTTPS)'] },
+      { t: 'Configuración', sub: ['Debian: /etc/apache2 (sites-available, sites-enabled, a2ensite, a2enmod)', 'RedHat: /etc/httpd/conf/httpd.conf', 'Directivas: DocumentRoot, ServerName, Directory'] },
+      { t: 'VirtualHosts', sub: ['Varios sitios en una misma IP (por nombre) o por IP/puerto'] },
+      { t: 'Módulos', sub: ['mod_ssl (HTTPS), mod_rewrite (URLs), mod_php, mod_proxy'] },
+      { t: 'Rendimiento (MPM)', sub: ['prefork (procesos), worker (hilos), event'] },
+      { t: 'Logs y control', sub: ['access_log, error_log · .htaccess (config por directorio)'] }
+    ],
+    resumen: 'Apache atiende peticiones HTTP/HTTPS. Los VirtualHosts alojan varios sitios en un servidor; mod_ssl habilita HTTPS y mod_rewrite reescribe URLs. El modelo de procesos (MPM) puede ser prefork, worker o event según la carga. Su alternativa principal es Nginx (más eficiente con mucha concurrencia; Apache es muy flexible con módulos y .htaccess).',
+    clave: ['Puertos 80/443 · alternativa: Nginx', 'a2ensite sitio · a2enmod ssl rewrite', 'systemctl reload apache2 (recarga sin cortar)', 'DocumentRoot, ServerName, VirtualHost']
+  },
+  'B4-T1.4': {
+    esquema: [
+      { t: 'Qué es', sub: ['Gestión de configuración y automatización (de Red Hat)'] },
+      { t: 'Sin agente (agentless)', sub: ['Usa SSH; solo requiere Python en los nodos'] },
+      { t: 'Modelo push', sub: ['El nodo de control empuja la configuración'] },
+      { t: 'Componentes', sub: ['Inventario (hosts), Playbooks (YAML), tareas, módulos, roles', 'Handlers (acciones al cambiar algo), facts (datos del nodo)', 'ansible-vault (cifrar secretos)'] },
+      { t: 'Comandos ad-hoc', sub: ['Ejecutar una orden puntual sin playbook'] },
+      { t: 'Idempotencia', sub: ['Ejecutar N veces deja el sistema en el mismo estado'] }
+    ],
+    resumen: 'Ansible automatiza la configuración de muchos servidores de forma declarativa e idempotente. Su gran ventaja es que no necesita agente: basta con SSH y Python. Los playbooks (YAML) agrupan tareas y roles; los handlers reaccionan a cambios y ansible-vault cifra los datos sensibles. Alternativas: Puppet y Chef (con agente, modelo pull) y SaltStack.',
+    clave: ['ansible-playbook playbook.yml -i inventario', 'ansible all -m ping (ad-hoc)', 'YAML · sin agente (SSH) · idempotente', 'ansible-vault para secretos']
+  },
+  'B4-T1.5': {
+    esquema: [
+      { t: 'Qué es', sub: ['Gestión de configuración + ejecución remota a gran escala'] },
+      { t: 'Arquitectura', sub: ['master/minion (con agente); también salt-ssh (sin agente)', 'Bus de mensajes ZeroMQ (muy rápido)'] },
+      { t: 'Elementos', sub: ['Estados en ficheros SLS (YAML + plantillas Jinja)', 'top.sls (asigna estados a minions)', 'Grains (datos del minion) · Pillars (datos sensibles)'] },
+      { t: 'Ejecución', sub: ['salt (desde el master), salt-call (local en el minion)', 'Reactor (respuesta automática a eventos)'] }
+    ],
+    resumen: 'Salt gestiona la configuración de grandes infraestructuras y ejecuta órdenes en muchos nodos a la vez con gran velocidad (ZeroMQ). Los estados se definen en ficheros SLS (YAML+Jinja) y top.sls los asigna a los minions; grains y pillars aportan datos. Frente a Ansible: Salt suele usar agente (master/minion) y escala muy rápido; Ansible es sin agente y más simple.',
+    clave: ["salt '*' test.ping", 'Estados .sls · top.sls · grains / pillars', 'salt-call (local) · Reactor (eventos)', 'Master/minion (agente) vs Ansible (sin agente)']
+  },
+  'B4-T2.1': {
+    esquema: [
+      { t: 'Rol del DBA', sub: ['Instalación, configuración y mantenimiento'] },
+      { t: 'Seguridad', sub: ['Usuarios, roles y privilegios (GRANT/REVOKE)', 'Cifrado, auditoría'] },
+      { t: 'Copias de seguridad', sub: ['Lógicas (dump) y físicas', 'Completa, incremental y diferencial · restauración y PITR'] },
+      { t: 'Rendimiento', sub: ['Índices, planes de ejecución (EXPLAIN), tuning, caché'] },
+      { t: 'Integridad y concurrencia', sub: ['ACID, transacciones, niveles de aislamiento, bloqueos, deadlocks'] },
+      { t: 'Alta disponibilidad', sub: ['Replicación (maestro-esclavo), clustering, failover, RAID'] }
+    ],
+    resumen: 'El DBA mantiene la BBDD sana: controla el acceso (permisos), garantiza copias (completas/incrementales) y recuperación, optimiza el rendimiento (sobre todo con índices y buenos planes de ejecución) y asegura integridad y disponibilidad. ACID = Atomicidad, Consistencia, Aislamiento (Isolation) y Durabilidad: las 4 garantías de una transacción; los niveles de aislamiento regulan la concurrencia.',
+    clave: ['GRANT / REVOKE (privilegios)', 'Copias: mysqldump · pg_dump · backup completo/incremental', 'Índices · EXPLAIN (plan de ejecución)', 'Transacción: BEGIN … COMMIT / ROLLBACK · ACID']
+  },
+  'B4-T2.2': {
+    esquema: [
+      { t: 'Definición', sub: ['Software que crea, consulta, actualiza y administra las BBDD'] },
+      { t: 'Arquitectura ANSI/SPARC', sub: ['3 niveles: externo (vistas), conceptual (esquema lógico), interno (físico)', 'Independencia de datos lógica y física'] },
+      { t: 'Funciones', sub: ['Definición, manipulación, control (seguridad, integridad, concurrencia, recuperación)'] },
+      { t: 'Lenguajes SQL', sub: ['DDL: CREATE, ALTER, DROP', 'DML: SELECT, INSERT, UPDATE, DELETE', 'DCL: GRANT, REVOKE', 'TCL: COMMIT, ROLLBACK, SAVEPOINT'] },
+      { t: 'Modelos', sub: ['Relacional · NoSQL (clave-valor, documental, columnar, grafos) · jerárquico · red · OO'] },
+      { t: 'Propiedades y componentes', sub: ['ACID · motor, diccionario de datos, gestor de transacciones/consultas'] }
+    ],
+    resumen: 'Un SGBD es la capa de software entre las aplicaciones y los datos: según la arquitectura ANSI/SPARC ofrece tres niveles (externo, conceptual e interno) que dan independencia de datos. Garantiza integridad, seguridad y concurrencia. Ten muy claras las 4 familias del lenguaje SQL —DDL, DML, DCL y TCL— y los niveles ANSI/SPARC: son preguntas clásicas de test.',
+    clave: ['ANSI/SPARC: externo / conceptual / interno', 'DDL (estructura) · DML (datos) · DCL (permisos) · TCL (transacciones)', 'Relacional vs NoSQL (clave-valor, documental, columnar, grafos)']
+  },
+  'B4-T2.3': {
+    esquema: [
+      { t: 'MySQL / MariaDB', sub: ['Relacional · open source (GPL) · web, pila LAMP'] },
+      { t: 'PostgreSQL', sub: ['Relacional-objeto · open source · robusto, muy estándar; PostGIS (geo)'] },
+      { t: 'Oracle', sub: ['Relacional · propietario · grandes empresas y sistemas críticos'] },
+      { t: 'SQL Server', sub: ['Relacional · propietario (Microsoft) · entornos Windows/.NET'] },
+      { t: 'SQLite', sub: ['Relacional · dominio público · embebido (móvil, apps ligeras, un fichero)'] },
+      { t: 'NoSQL (ejemplos)', sub: ['MongoDB (documental), Redis (clave-valor, en memoria), Cassandra (columnar), Neo4j (grafos)'] }
+    ],
+    resumen: 'La división clave es open source (MySQL/MariaDB, PostgreSQL) frente a propietario (Oracle, SQL Server). SQLite es embebido (sin servidor, un único fichero), ideal para móviles y apps ligeras. Los NoSQL se eligen por el modelo de datos: documental (MongoDB), clave-valor en memoria (Redis), columnar para big data (Cassandra) o grafos (Neo4j).',
+    clave: ['Open source: MySQL/MariaDB, PostgreSQL · Propietario: Oracle, SQL Server', 'SQLite = embebido (sin servidor)', 'NoSQL: MongoDB, Redis, Cassandra, Neo4j']
+  },
+  'B4-T3.1': {
+    esquema: [
+      { t: 'Agentes del correo', sub: ['MUA (cliente: Outlook, Thunderbird)', 'MTA (servidor de envío: Postfix, Sendmail, Exim)', 'MDA (entrega al buzón: Dovecot)'] },
+      { t: 'Protocolos y puertos', sub: ['SMTP: envío (25; submission 587; SMTPS 465)', 'POP3: descarga (110; seguro 995)', 'IMAP: sincroniza en servidor (143; seguro 993)'] },
+      { t: 'Formato', sub: ['MIME (adjuntos), cabeceras (From, To, Subject)'] },
+      { t: 'Seguridad / anti-spam', sub: ['SPF, DKIM, DMARC (autenticidad del remitente)', 'TLS, antivirus, listas negras (RBL)'] }
+    ],
+    resumen: 'El correo usa SMTP para enviar y POP3 o IMAP para recibir: POP3 descarga y borra del servidor; IMAP mantiene y sincroniza los mensajes en el servidor (mejor para varios dispositivos). Los servidores más comunes son Postfix (MTA) y Dovecot (IMAP/POP3). SPF, DKIM y DMARC autentican al remitente y combaten el spam y la suplantación.',
+    clave: ['SMTP 25/587 · POP3 110/995 · IMAP 143/993', 'MUA (cliente) · MTA (Postfix) · MDA (Dovecot)', 'IMAP sincroniza; POP3 descarga', 'Anti-spam: SPF, DKIM, DMARC']
+  },
+  'B4-T3.2.1': {
+    esquema: [
+      { t: 'Qué es', sub: ['Ejecutar varias máquinas virtuales sobre un mismo hardware'] },
+      { t: 'Hipervisor', sub: ['Tipo 1 (bare-metal, sobre el hardware): VMware ESXi, Hyper-V, KVM, Xen', 'Tipo 2 (hosted, sobre un SO): VirtualBox, VMware Workstation'] },
+      { t: 'Tipos', sub: ['Virtualización completa, paravirtualización', 'VM vs contenedor (la VM lleva SO completo; el contenedor comparte kernel)'] },
+      { t: 'Ventajas', sub: ['Consolidación de servidores, aislamiento, snapshots, alta disponibilidad, migración en vivo'] }
+    ],
+    resumen: 'La virtualización permite ejecutar varias máquinas virtuales (cada una con su SO) sobre un mismo servidor físico gracias a un hipervisor. Los de tipo 1 (ESXi, Hyper-V, KVM) corren directamente sobre el hardware y son los de producción; los de tipo 2 (VirtualBox) se instalan sobre un SO. Aporta consolidación, aislamiento, snapshots y migración en vivo. Se diferencia de los contenedores en que la VM incluye un SO completo.',
+    clave: ['Hipervisor tipo 1 (bare-metal): ESXi, Hyper-V, KVM, Xen', 'Tipo 2 (hosted): VirtualBox, VMware Workstation', 'VM = SO completo; contenedor = comparte kernel', 'Ventajas: consolidación, snapshots, migración en vivo']
+  },
+  'B4-T3.2.2': {
+    esquema: [
+      { t: 'Qué es', sub: ['Plataforma de contenedores (empaqueta app + dependencias)'] },
+      { t: 'Conceptos', sub: ['Imagen (plantilla) → Contenedor (instancia en ejecución)', 'Dockerfile (receta para crear la imagen)', 'Registry: Docker Hub (repositorio de imágenes)'] },
+      { t: 'Persistencia y red', sub: ['Volúmenes (datos persistentes), redes, mapeo de puertos'] },
+      { t: 'Orquestación', sub: ['docker-compose (varios contenedores), Kubernetes (a gran escala)'] },
+      { t: 'Contenedor vs VM', sub: ['Comparte el kernel del host → más ligero y rápido; menos aislado que una VM'] }
+    ],
+    resumen: 'Docker empaqueta una aplicación con todas sus dependencias en un contenedor, que se crea a partir de una imagen (definida en un Dockerfile). Los contenedores comparten el kernel del host, por eso son mucho más ligeros y rápidos de arrancar que una VM. Los volúmenes dan persistencia y docker-compose levanta varios contenedores; a gran escala se orquestan con Kubernetes.',
+    clave: ['docker build -t imagen . · docker run · docker ps', 'Imagen → contenedor · Dockerfile · Docker Hub', 'Volúmenes (persistencia) · -p puerto:puerto', 'docker-compose · Kubernetes (orquestación)']
+  },
+  'B4-T3.3': {
+    esquema: [
+      { t: 'Qué es', sub: ['Arquitectura de servicios pequeños, independientes y desplegables por separado'] },
+      { t: 'Frente al monolito', sub: ['Monolito: una sola aplicación grande', 'Microservicios: cada función = un servicio con su propia BBDD'] },
+      { t: 'Comunicación', sub: ['APIs (REST/HTTP, gRPC), mensajería asíncrona (colas)'] },
+      { t: 'Componentes de apoyo', sub: ['API Gateway, service discovery, balanceo, tolerancia a fallos'] },
+      { t: 'Despliegue', sub: ['Contenedores (Docker) + orquestación (Kubernetes), CI/CD'] }
+    ],
+    resumen: 'Los microservicios dividen una aplicación en servicios pequeños e independientes, cada uno con su responsabilidad y su base de datos, que se comunican por API (normalmente REST). Frente al monolito, permiten escalar y desplegar cada parte por separado, pero añaden complejidad de red y operación (API gateway, descubrimiento de servicios, monitorización). Suelen apoyarse en contenedores y Kubernetes.',
+    clave: ['Monolito vs microservicios', 'Comunicación por API (REST) o mensajería', 'API Gateway · service discovery', 'Docker + Kubernetes + CI/CD']
+  },
+  'B4-T4': {
+    esquema: [
+      { t: 'Direccionamiento', sub: ['IP (IPv4/IPv6), máscara, gateway por defecto', 'DHCP (asignación automática), DNS (nombres↔IP)'] },
+      { t: 'Encaminamiento y NAT', sub: ['Tablas de rutas, NAT/PAT (traducción de direcciones)'] },
+      { t: 'Servicios de red', sub: ['DNS, DHCP, proxy, VPN'] },
+      { t: 'Diagnóstico', sub: ['ping, traceroute/tracert, ip/ifconfig, netstat/ss, nslookup/dig, nmap'] },
+      { t: 'Gestión', sub: ['Monitorización (SNMP), documentación, inventario, QoS'] }
+    ],
+    resumen: 'Administrar redes implica el direccionamiento IP (con DHCP para automatizar y DNS para los nombres), el encaminamiento y NAT, y los servicios de red (DNS, DHCP, proxy, VPN). El diagnóstico se hace con herramientas como ping, traceroute, dig o netstat, y la gestión con monitorización SNMP y buena documentación.',
+    clave: ['ping · traceroute · ip a · ss -tuln · dig', 'DHCP (IP automática) · DNS (nombres) · NAT', 'SNMP (monitorización)']
+  },
+  'B4-T5': {
+    esquema: [
+      { t: 'Principios (CIA)', sub: ['Confidencialidad, Integridad, Disponibilidad (+ autenticidad, no repudio)'] },
+      { t: 'Amenazas y controles', sub: ['Malware, phishing, DoS, fuga de datos', 'Controles: preventivos, detectivos, correctivos'] },
+      { t: 'Marco normativo', sub: ['ENS (Esquema Nacional de Seguridad), ISO 27001, RGPD'] },
+      { t: 'Seguridad física del CPD', sub: ['Control de acceso, CCTV, refrigeración, SAI/UPS, grupo electrógeno', 'Redundancia, niveles Tier (I–IV), detección/extinción de incendios'] },
+      { t: 'Continuidad', sub: ['Copias de seguridad, plan de recuperación (DRP), plan de continuidad (BCP)', 'RPO (dato perdido) y RTO (tiempo de recuperación)'] }
+    ],
+    resumen: 'La seguridad de la información se basa en la tríada CIA: Confidencialidad, Integridad y Disponibilidad. Se articula con marcos como el ENS, ISO 27001 y el RGPD. El CPD (centro de proceso de datos) requiere seguridad física: control de acceso, refrigeración, alimentación redundante (SAI/UPS, grupo electrógeno) y clasificación por niveles Tier. La continuidad se garantiza con copias, un DRP y un BCP, midiendo RPO y RTO.',
+    clave: ['CIA: Confidencialidad, Integridad, Disponibilidad', 'ENS · ISO 27001 · RGPD', 'CPD: SAI/UPS, refrigeración, Tier I–IV, redundancia', 'DRP/BCP · RPO (dato) y RTO (tiempo)']
+  },
+  'B4-T6.1': {
+    esquema: [
+      { t: 'Conmutación de circuitos', sub: ['Reserva un camino dedicado (ej. telefonía clásica)', 'Retardo constante; desperdicia recursos si no hay tráfico'] },
+      { t: 'Conmutación de paquetes', sub: ['Los datos se trocean en paquetes que comparten la red (ej. Internet/IP)', 'Datagrama (sin conexión) vs circuito virtual (con conexión)'] },
+      { t: 'Comparativa', sub: ['Circuitos: calidad garantizada · Paquetes: eficiencia y flexibilidad'] }
+    ],
+    resumen: 'En la conmutación de circuitos se reserva un camino dedicado extremo a extremo durante toda la comunicación (como la telefonía tradicional): garantiza calidad pero desaprovecha recursos. En la conmutación de paquetes los datos se dividen en paquetes que comparten la red y se enrutan de forma independiente (Internet): es mucho más eficiente y flexible. Dentro de paquetes: datagrama (sin conexión, como IP) o circuito virtual (con conexión).',
+    clave: ['Circuitos: camino dedicado (telefonía)', 'Paquetes: comparten red (Internet/IP)', 'Datagrama (sin conexión) vs circuito virtual']
+  },
+  'B4-T6.2': {
+    esquema: [
+      { t: 'Generaciones', sub: ['1G (analógico) · 2G (GSM, digital, SMS) · 2.5G (GPRS/EDGE, datos)', '3G (UMTS/HSPA) · 4G (LTE, todo IP) · 5G (baja latencia, IoT)'] },
+      { t: 'Conceptos', sub: ['Red celular (celdas), estación base, handover (traspaso entre celdas)', 'SIM, IMEI, itinerancia (roaming)'] }
+    ],
+    resumen: 'Las redes móviles evolucionan por generaciones: 2G (GSM) introdujo la voz digital y los SMS; 2.5G (GPRS) los datos; 3G (UMTS) la banda ancha móvil; 4G (LTE) una red totalmente IP más rápida; y 5G añade muy baja latencia y densidad para IoT. Se basan en una estructura celular con estaciones base y traspaso (handover) entre celdas al moverse.',
+    clave: ['2G=GSM · 2.5G=GPRS · 3G=UMTS · 4G=LTE · 5G', 'Celdas, estación base, handover', 'SIM · IMEI · roaming']
+  },
+  'B4-T7.1': {
+    esquema: [
+      { t: 'Modelos', sub: ['OSI: 7 capas (física, enlace, red, transporte, sesión, presentación, aplicación)', 'TCP/IP: 4 capas (acceso a red, Internet, transporte, aplicación)'] },
+      { t: 'Encapsulación', sub: ['Cada capa añade su cabecera: segmento → paquete → trama'] },
+      { t: 'Capa de transporte', sub: ['TCP: fiable, orientado a conexión (3-way handshake)', 'UDP: rápido, sin conexión (streaming, DNS, VoIP)'] },
+      { t: 'Capa de Internet', sub: ['IP (enrutamiento), IPv4 (32 bits) vs IPv6 (128 bits), ICMP'] }
+    ],
+    resumen: 'TCP/IP es la pila de protocolos de Internet, con 4 capas que se corresponden con las 7 del modelo teórico OSI. En cada capa se encapsulan los datos añadiendo cabeceras. En transporte, TCP es fiable y orientado a conexión (establece la sesión con un handshake de 3 vías y confirma la entrega) mientras que UDP es rápido y sin conexión (ideal para voz y vídeo). En la capa de Internet, IP se encarga del direccionamiento y el enrutamiento.',
+    clave: ['OSI 7 capas ↔ TCP/IP 4 capas', 'TCP: fiable, con conexión (handshake 3 vías)', 'UDP: rápido, sin conexión (DNS, VoIP, streaming)', 'IPv4 (32 bits) · IPv6 (128 bits)']
+  },
+  'B4-T7.2': {
+    esquema: [
+      { t: 'Puertos conocidos (well-known)', sub: ['HTTP 80 · HTTPS 443 · DNS 53 · DHCP 67/68', 'FTP 20/21 · SSH 22 · Telnet 23 · SMTP 25', 'POP3 110 · IMAP 143 · SNMP 161/162 · LDAP 389 · RDP 3389'] },
+      { t: 'Protocolos de apoyo', sub: ['ARP (IP→MAC), ICMP (ping, errores), DNS (nombres), DHCP (IP automática)'] },
+      { t: 'Rangos de puertos', sub: ['0–1023 conocidos · 1024–49151 registrados · 49152–65535 dinámicos'] }
+    ],
+    resumen: 'Cada servicio de red escucha en un puerto conocido: conviene memorizar los más habituales (HTTP 80, HTTPS 443, DNS 53, SSH 22, SMTP 25...). Protocolos de apoyo esenciales: ARP resuelve IP a MAC, ICMP se usa para ping y mensajes de error, DNS traduce nombres a IP y DHCP asigna direcciones automáticamente. Los puertos 0–1023 son "bien conocidos".',
+    clave: ['80 HTTP · 443 HTTPS · 53 DNS · 22 SSH · 25 SMTP', '110 POP3 · 143 IMAP · 21 FTP · 3389 RDP · 389 LDAP', 'ARP (IP→MAC) · ICMP (ping) · DNS · DHCP']
+  },
+  'B4-T7.3a': {
+    esquema: [
+      { t: 'Estructura IPv4', sub: ['32 bits, 4 octetos (ej. 192.168.1.10)', 'Parte de red + parte de host (la máscara los separa)'] },
+      { t: 'Clases', sub: ['A: /8 (1–126) · B: /16 (128–191) · C: /24 (192–223)', 'D: multicast (224–239) · E: reservada'] },
+      { t: 'Subnetting (CIDR/VLSM)', sub: ['Notación /n (ej. /24) · VLSM = subredes de tamaño variable', 'Hosts útiles = 2^(bits host) − 2 (red y broadcast)', 'Subredes = 2^(bits prestados)'] },
+      { t: 'Direcciones privadas', sub: ['10.0.0.0/8 · 172.16.0.0/12 · 192.168.0.0/16'] }
+    ],
+    resumen: 'Una IPv4 tiene 32 bits divididos en red y host; la máscara (o el prefijo /n) marca dónde acaba la red. El subnetting divide una red en subredes: los hosts útiles de una subred son 2^(bits de host) − 2 (se restan la dirección de red y la de broadcast). Por ejemplo, un /24 tiene 256 direcciones y 254 hosts útiles. VLSM permite subredes de tamaños distintos. Recuerda los rangos privados (10/8, 172.16/12, 192.168/16).',
+    clave: ['/24 = 256 direcciones, 254 hosts útiles', 'Hosts = 2^(bits host) − 2', 'Clases: A /8 · B /16 · C /24', 'Privadas: 10.0.0.0/8, 172.16/12, 192.168/16']
+  },
+  'B4-T7.3b': {
+    esquema: [
+      { t: 'Encaminamiento', sub: ['Estático (rutas fijas) vs dinámico (protocolos)', 'Tabla de rutas, gateway por defecto, métrica'] },
+      { t: 'Protocolos interiores (IGP)', sub: ['RIP: vector distancia (máx 15 saltos)', 'OSPF: estado de enlace, áreas (el más usado)', 'EIGRP (Cisco)'] },
+      { t: 'Protocolo exterior (EGP)', sub: ['BGP: enruta entre sistemas autónomos (la "columna" de Internet)'] }
+    ],
+    resumen: 'El encaminamiento decide por dónde enviar los paquetes: puede ser estático (rutas configuradas a mano) o dinámico, con protocolos que aprenden las rutas. Los protocolos interiores (dentro de una organización) más típicos son RIP (vector distancia, limitado a 15 saltos) y OSPF (estado de enlace, con áreas, el más usado); EIGRP es de Cisco. Entre organizaciones (sistemas autónomos) se usa BGP, que sostiene el enrutamiento de Internet.',
+    clave: ['Estático vs dinámico · gateway por defecto', 'RIP (vector distancia, 15 saltos) · OSPF (estado de enlace)', 'BGP: entre sistemas autónomos (Internet)']
+  },
+  'B4-T8': {
+    esquema: [
+      { t: 'HTTP', sub: ['Sin estado (stateless) · métodos GET, POST, PUT, DELETE, PATCH', 'Códigos: 2xx éxito, 3xx redirección, 4xx error cliente, 5xx error servidor', 'Estado con cookies / sesiones · cabeceras'] },
+      { t: 'HTTPS', sub: ['HTTP sobre TLS (puerto 443)'] },
+      { t: 'SSL/TLS', sub: ['TLS sustituye a SSL (obsoleto)', 'Handshake: negocia cifrado e intercambia claves', 'Cifrado asimétrico (intercambio) + simétrico (sesión)'] },
+      { t: 'Certificados', sub: ['X.509 emitidos por una CA (autoridad de certificación)', 'Validan identidad y contienen la clave pública'] }
+    ],
+    resumen: 'HTTP es un protocolo sin estado (cada petición es independiente; el estado se mantiene con cookies) que usa métodos (GET, POST...) y códigos de respuesta (2xx/3xx/4xx/5xx). HTTPS es HTTP sobre TLS (puerto 443): TLS —sucesor de SSL— cifra la comunicación negociando en un handshake el cifrado y las claves (asimétrico para intercambiarlas, simétrico para la sesión). Los certificados X.509, emitidos por una CA, garantizan la identidad del servidor.',
+    clave: ['HTTP stateless · GET/POST/PUT/DELETE · 2xx/3xx/4xx/5xx', 'HTTPS = HTTP + TLS (puerto 443)', 'TLS (no SSL) · handshake · asimétrico+simétrico', 'Certificado X.509 · CA']
+  },
+  'B4-T9': {
+    esquema: [
+      { t: 'Cortafuegos (firewall)', sub: ['Filtra tráfico por reglas · iptables/nftables, firewalld', 'Tipos: filtrado de paquetes, con estado (stateful), de aplicación (WAF)'] },
+      { t: 'Arquitectura', sub: ['DMZ (zona desmilitarizada), segmentación, IDS/IPS'] },
+      { t: 'VPN', sub: ['Site-to-site (une sedes) y client-to-site (teletrabajo)', 'IPsec (capa de red) y SSL/TLS VPN (capa de aplicación)', 'Túnel cifrado sobre red pública'] },
+      { t: 'Otros', sub: ['Cifrado, autenticación, NAC, WAF'] }
+    ],
+    resumen: 'La seguridad de red combina cortafuegos (que filtran el tráfico por reglas; los stateful siguen el estado de las conexiones), segmentación con DMZ e IDS/IPS para detectar/prevenir intrusiones. Las VPN crean túneles cifrados sobre redes públicas: site-to-site unen oficinas y client-to-site dan acceso a teletrabajadores; las tecnologías típicas son IPsec (a nivel de red) y SSL/TLS VPN (a nivel de aplicación).',
+    clave: ['Firewall: filtrado, stateful, WAF · iptables/nftables', 'DMZ · IDS (detecta) / IPS (previene)', 'VPN: site-to-site y client-to-site', 'IPsec (red) · SSL/TLS VPN (aplicación)']
+  },
+  'B4-T10': {
+    esquema: [
+      { t: 'Ethernet', sub: ['IEEE 802.3 · tramas · dirección MAC (48 bits)', 'CSMA/CD (control de acceso al medio, redes antiguas con hub)'] },
+      { t: 'Dispositivos', sub: ['Hub (capa 1, obsoleto) · Switch (capa 2, por MAC) · Router (capa 3, por IP)'] },
+      { t: 'Segmentación', sub: ['VLAN (redes lógicas separadas) · STP (evita bucles)'] },
+      { t: 'Cableado', sub: ['Par trenzado UTP (Cat 5e/6/6a) · fibra óptica · conector RJ-45'] },
+      { t: 'WiFi', sub: ['IEEE 802.11 (a/b/g/n/ac/ax) · CSMA/CA · SSID · WPA2/WPA3'] }
+    ],
+    resumen: 'Una LAN suele ser Ethernet (IEEE 802.3), donde cada equipo se identifica por su dirección MAC. El switch (capa 2) reenvía por MAC y es el corazón de la LAN moderna; el router (capa 3) conecta redes por IP. Las VLAN segmentan la red en grupos lógicos y STP evita bucles. El cableado habitual es par trenzado UTP (Cat 5e/6) o fibra. El WiFi (IEEE 802.11) usa CSMA/CA y se protege con WPA2/WPA3.',
+    clave: ['Ethernet 802.3 · MAC (48 bits) · CSMA/CD', 'Hub (capa 1) · Switch (capa 2, MAC) · Router (capa 3, IP)', 'VLAN (segmenta) · STP (evita bucles)', 'UTP Cat 5e/6 · WiFi 802.11 · WPA2/WPA3']
+  }
+});
+
 function openFicha(id) {
   const f = FICHAS[id];
   if (!f) return;
