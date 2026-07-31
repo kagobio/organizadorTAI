@@ -129,6 +129,8 @@
   .repaso-meta { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
   .repaso-days { font-size: 14px; color: var(--text-secondary); white-space: nowrap; }
   .repaso-days.overdue { color: var(--accent); font-weight: 600; }
+  .repaso-info { min-width: 0; flex: 1; }
+  .repaso-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
   /* ---- Mi plan ---- */
   .plan-link { display: inline-block; font-size: 14px; color: var(--accent); margin-top: 8px; cursor: pointer; }
@@ -449,7 +451,7 @@
 <!-- ==================== REPASOS ==================== -->
 <section id="screen-repasos" class="screen">
   <div class="screen-title">Repasos</div>
-  <div class="repaso-hint">Del más olvidado al más reciente. Toca un tema cuando lo repases.</div>
+  <div class="repaso-hint">Del más olvidado al más reciente. Toca 📄 para leer la ficha; toca el tema cuando lo repases.</div>
   <div id="repasos-list"></div>
 </section>
 
@@ -2353,8 +2355,13 @@ function renderRepasos() {
         <div class="repaso-name"></div>
         <div class="repaso-meta">${it.block} · ${it.n}×</div>
       </div>
-      <div class="repaso-days${overdue ? ' overdue' : ''}">${daysTxt}</div>`;
+      <div class="repaso-right">
+        ${FICHAS[it.id] ? '<button class="topic-ficha" title="Ver ficha">📄</button>' : ''}
+        <div class="repaso-days${overdue ? ' overdue' : ''}">${daysTxt}</div>
+      </div>`;
     row.querySelector('.repaso-name').textContent = it.name;
+    const fb = row.querySelector('.topic-ficha');
+    if (fb) fb.onclick = (e) => { e.stopPropagation(); openFicha(it.id); };
     row.onclick = () => { toggleTopicToday(it.id, it.block); renderRepasos(); };
     cont.appendChild(row);
   });
