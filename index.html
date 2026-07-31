@@ -989,8 +989,8 @@ function suggestReview(block) {
 }
 
 let topicsBlock = null;
-function openTopicsSheet() {
-  const block = blockFor(new Date());
+function openTopicsSheet(block) {
+  block = block || blockFor(new Date());
   topicsBlock = block;
   document.getElementById('topics-title').textContent = 'Temas de ' + block;
   renderTopicsSuggest(block);
@@ -1645,6 +1645,8 @@ function renderPlan() {
       <div class="plan-block"><div class="b"></div><div class="c">${BLOCK_INFO[block] || ''}</div></div>`;
     row.querySelector('.plan-day').textContent = names[day];
     row.querySelector('.b').textContent = block;
+    row.style.cursor = 'pointer';
+    row.onclick = () => { closePlanSheet(); openTopicsSheet(block); };
     cont.appendChild(row);
   });
 }
