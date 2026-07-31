@@ -1532,6 +1532,232 @@ Object.assign(FICHAS, {
   }
 });
 
+// Bloque 3 — Desarrollo e ingeniería del software.
+Object.assign(FICHAS, {
+  'B3-T1.1': {
+    esquema: [
+      { t: 'Modelo Entidad-Relación (E-R)', sub: ['Entidades, atributos y relaciones', 'Cardinalidad: 1:1, 1:N, N:M', 'Clave primaria; entidad débil', 'Notaciones: Chen y pata de gallo'] },
+      { t: 'Diagrama de Flujo de Datos (DFD)', sub: ['Procesos, flujos, almacenes y entidades externas', 'Niveles: contexto → nivel 0 → nivel 1…'] },
+      { t: 'Fases del diseño', sub: ['Conceptual (E-R) → lógico (relacional) → físico'] }
+    ],
+    resumen: 'El modelo Entidad-Relación (E-R) representa los datos de forma conceptual mediante entidades (objetos), sus atributos y las relaciones entre ellas, con su cardinalidad (1:1, 1:N, N:M). El DFD, en cambio, modela cómo fluye la información entre procesos, almacenes y entidades externas, por niveles de detalle. El diseño avanza del nivel conceptual (E-R) al lógico (modelo relacional) y al físico.',
+    clave: ['E-R: entidades, atributos, relaciones', 'Cardinalidad 1:1 · 1:N · N:M', 'DFD: procesos, flujos, almacenes, ent. externas', 'Conceptual → lógico → físico']
+  },
+  'B3-T1.2': {
+    esquema: [
+      { t: 'Modelo relacional', sub: ['Tablas (relaciones), filas (tuplas), columnas (atributos)', 'Claves: primaria, candidata, foránea', 'Integridad de entidad y referencial'] },
+      { t: 'Paso E-R → relacional', sub: ['Entidades → tablas; relaciones N:M → tabla intermedia'] },
+      { t: 'Normalización', sub: ['1FN (atómicos), 2FN (dependencia completa de la clave), 3FN (sin dependencias transitivas), BCNF', 'Objetivo: eliminar redundancia y anomalías'] }
+    ],
+    resumen: 'El diseño de una BBDD relacional organiza los datos en tablas con claves primarias (identifican la fila) y foráneas (enlazan tablas, garantizando la integridad referencial). Del modelo E-R se pasa al relacional convirtiendo entidades en tablas y las relaciones N:M en tablas intermedias. La normalización (1FN, 2FN, 3FN, BCNF) elimina redundancias y anomalías de inserción/actualización/borrado.',
+    clave: ['Tabla · tupla · atributo · clave primaria/foránea', 'Integridad referencial', 'Normalización: 1FN, 2FN, 3FN, BCNF']
+  },
+  'B3-T2': {
+    esquema: [
+      { t: 'Paradigmas', sub: ['Imperativo, orientado a objetos, funcional, lógico, declarativo'] },
+      { t: 'Ejecución', sub: ['Compilados (C, Java a bytecode) vs interpretados (Python, JS)'] },
+      { t: 'Tipado', sub: ['Estático vs dinámico; fuerte vs débil'] },
+      { t: 'Traductores', sub: ['Compilador, intérprete, ensamblador', 'Fases: análisis léxico, sintáctico, semántico, generación y optimización de código'] }
+    ],
+    resumen: 'Los lenguajes se agrupan por paradigma (imperativo, orientado a objetos, funcional, lógico) y por su forma de ejecución: compilados (se traducen antes a código máquina/bytecode) o interpretados (se ejecutan línea a línea). El tipado puede ser estático o dinámico y fuerte o débil. Un compilador traduce el programa en varias fases: análisis léxico, sintáctico y semántico, y generación/optimización de código.',
+    clave: ['Paradigmas: imperativo, OO, funcional, lógico', 'Compilado vs interpretado', 'Tipado estático/dinámico, fuerte/débil', 'Compilador: léxico → sintáctico → semántico → código']
+  },
+  'B3-T3': {
+    esquema: [
+      { t: 'Sublenguajes', sub: ['DDL (CREATE/ALTER/DROP), DML (SELECT/INSERT/UPDATE/DELETE), DCL (GRANT/REVOKE), TCL (COMMIT/ROLLBACK)'] },
+      { t: 'Consultas (SELECT)', sub: ['WHERE (filtro), ORDER BY (orden)', 'GROUP BY + HAVING (agrupación), funciones: COUNT, SUM, AVG, MIN, MAX'] },
+      { t: 'Combinaciones (JOIN)', sub: ['INNER, LEFT, RIGHT, FULL'] },
+      { t: 'Otros', sub: ['Subconsultas, vistas, índices'] }
+    ],
+    resumen: 'SQL es el lenguaje estándar de las BBDD relacionales, dividido en DDL (estructura), DML (datos), DCL (permisos) y TCL (transacciones). El SELECT consulta datos y admite filtros (WHERE), ordenación (ORDER BY), agrupación (GROUP BY con HAVING y funciones de agregado) y combinación de tablas con JOINs (INNER une coincidencias; LEFT/RIGHT conservan una de las tablas). Las vistas y los índices ayudan a organizar y acelerar.',
+    clave: ['DDL/DML/DCL/TCL', 'SELECT … WHERE … GROUP BY … HAVING … ORDER BY', 'JOIN: INNER / LEFT / RIGHT / FULL', 'COUNT, SUM, AVG · vistas · índices']
+  },
+  'B3-T4.1.1': {
+    esquema: [
+      { t: 'Qué son', sub: ['Soluciones reutilizables a problemas comunes de diseño (GoF, Gang of Four)'] },
+      { t: 'Creacionales', sub: ['Singleton, Factory Method, Abstract Factory, Builder, Prototype'] },
+      { t: 'Estructurales', sub: ['Adapter, Facade, Decorator, Composite, Proxy, Bridge'] },
+      { t: 'De comportamiento', sub: ['Observer, Strategy, Command, Iterator, State, Template Method'] },
+      { t: 'Arquitectónicos', sub: ['MVC (Modelo-Vista-Controlador)'] }
+    ],
+    resumen: 'Los patrones de diseño son soluciones probadas y reutilizables a problemas habituales de programación orientada a objetos. Los clásicos (Gang of Four) se agrupan en tres categorías: creacionales (cómo crear objetos, p. ej. Singleton y Factory), estructurales (cómo componerlos, p. ej. Adapter y Facade) y de comportamiento (cómo se comunican, p. ej. Observer y Strategy). MVC es un patrón arquitectónico que separa datos, presentación y control.',
+    clave: ['GoF: creacionales, estructurales, comportamiento', 'Singleton, Factory · Adapter, Facade · Observer, Strategy', 'MVC (Modelo-Vista-Controlador)']
+  },
+  'B3-T4.1.2': {
+    esquema: [
+      { t: 'S — SRP', sub: ['Responsabilidad única: una clase, una sola razón para cambiar'] },
+      { t: 'O — OCP', sub: ['Abierto/cerrado: abierto a extensión, cerrado a modificación'] },
+      { t: 'L — LSP', sub: ['Sustitución de Liskov: un subtipo debe poder sustituir a su tipo base'] },
+      { t: 'I — ISP', sub: ['Segregación de interfaces: interfaces pequeñas y específicas'] },
+      { t: 'D — DIP', sub: ['Inversión de dependencias: depender de abstracciones, no de implementaciones'] }
+    ],
+    resumen: 'SOLID son cinco principios de diseño orientado a objetos para lograr código mantenible y flexible: Responsabilidad única (SRP), Abierto/cerrado (OCP), Sustitución de Liskov (LSP), Segregación de interfaces (ISP) e Inversión de dependencias (DIP). Aplicarlos reduce el acoplamiento y facilita ampliar el software sin romperlo.',
+    clave: ['SRP · OCP · LSP · ISP · DIP', 'Responsabilidad única, abierto/cerrado', 'Depender de abstracciones (DIP)']
+  },
+  'B3-T4.2': {
+    esquema: [
+      { t: 'Qué es', sub: ['UML: Lenguaje Unificado de Modelado (estándar para diseñar software)'] },
+      { t: 'Diagramas estructurales', sub: ['Clases, objetos, componentes, despliegue, paquetes'] },
+      { t: 'Diagramas de comportamiento', sub: ['Casos de uso, secuencia, actividad, estados, comunicación'] },
+      { t: 'Diagrama de clases', sub: ['Relaciones: asociación, herencia, agregación, composición, dependencia'] }
+    ],
+    resumen: 'UML es un lenguaje gráfico estándar para modelar sistemas de software. Sus diagramas se dividen en estructurales (qué hay: clases, componentes, despliegue) y de comportamiento (qué ocurre: casos de uso, secuencia, actividad, estados). El diagrama de clases es el más usado: representa clases con sus atributos y métodos y las relaciones entre ellas (herencia, asociación, agregación y composición).',
+    clave: ['UML = Lenguaje Unificado de Modelado', 'Estructurales (clases, componentes) vs comportamiento (casos de uso, secuencia)', 'Clases: herencia, asociación, agregación, composición']
+  },
+  'B3-T5.1': {
+    esquema: [
+      { t: 'Qué es', sub: ['Lenguaje orientado a objetos; compila a bytecode que corre en la JVM', 'Portabilidad: "write once, run anywhere"'] },
+      { t: 'Plataforma', sub: ['JDK (desarrollo) · JRE (ejecución) · JVM (máquina virtual)', 'Recolector de basura (garbage collector)'] },
+      { t: 'POO', sub: ['Clases, herencia, polimorfismo, encapsulación, abstracción', 'Interfaces y clases abstractas'] }
+    ],
+    resumen: 'Java es un lenguaje orientado a objetos, fuertemente tipado, que se compila a bytecode ejecutado por la máquina virtual (JVM); de ahí su portabilidad entre plataformas. El JDK incluye las herramientas de desarrollo, el JRE lo necesario para ejecutar y la JVM interpreta el bytecode y gestiona la memoria con el recolector de basura. Se basa en los pilares de la POO: encapsulación, herencia, polimorfismo y abstracción.',
+    clave: ['Compila a bytecode → JVM · "write once, run anywhere"', 'JDK / JRE / JVM · garbage collector', 'POO: encapsulación, herencia, polimorfismo, abstracción']
+  },
+  'B3-T5.2': {
+    esquema: [
+      { t: 'Qué es', sub: ['Jakarta EE (antes Java EE): plataforma para aplicaciones empresariales'] },
+      { t: 'Arquitectura multicapa', sub: ['Presentación, negocio, persistencia/datos'] },
+      { t: 'Tecnologías', sub: ['Servlets y JSP (web), JSF, EJB (negocio), JPA (persistencia/ORM)'] },
+      { t: 'Servidores', sub: ['Tomcat (contenedor de servlets), WildFly/GlassFish (servidor de aplicaciones completo)'] }
+    ],
+    resumen: 'Jakarta EE (antes Java EE) es la plataforma de Java para aplicaciones empresariales, con arquitectura en capas (presentación, negocio y datos). Aporta tecnologías como Servlets y JSP para la capa web, EJB para la lógica de negocio y JPA para la persistencia (mapeo objeto-relacional). Se ejecuta en servidores: Tomcat es un contenedor de servlets ligero, y WildFly o GlassFish son servidores de aplicaciones completos.',
+    clave: ['Jakarta EE / Java EE · multicapa', 'Servlets, JSP, JSF · EJB · JPA (ORM)', 'Tomcat (servlets) vs WildFly/GlassFish (completo)']
+  },
+  'B3-T5.3': {
+    esquema: [
+      { t: 'Qué es', sub: ['Plataforma de desarrollo de Microsoft'] },
+      { t: 'Componentes', sub: ['CLR (Common Language Runtime), código intermedio CIL', 'Lenguajes: C#, VB.NET, F#'] },
+      { t: 'Versiones', sub: ['.NET Framework (Windows) vs .NET (Core, multiplataforma y open source)'] },
+      { t: 'Tecnologías', sub: ['ASP.NET (web), Entity Framework (ORM), Blazor'] }
+    ],
+    resumen: '.NET es la plataforma de desarrollo de Microsoft. El código (habitualmente en C#) se compila a un lenguaje intermedio (CIL) que ejecuta el CLR, con gestión automática de memoria. El clásico .NET Framework solo corría en Windows; el nuevo .NET (antes Core) es multiplataforma y open source. Para web se usa ASP.NET y para el acceso a datos, el ORM Entity Framework.',
+    clave: ['CLR · CIL · lenguaje principal C#', '.NET Framework (Windows) vs .NET/Core (multiplataforma)', 'ASP.NET (web) · Entity Framework (ORM)']
+  },
+  'B3-T6': {
+    esquema: [
+      { t: 'Qué son', sub: ['Interoperabilidad entre aplicaciones a través de la red'] },
+      { t: 'SOAP', sub: ['Basado en XML, contrato WSDL, protocolo estricto, sobre HTTP/otros'] },
+      { t: 'REST', sub: ['Sobre HTTP, sin estado, recursos con verbos GET/POST/PUT/DELETE', 'Datos en JSON (o XML)'] },
+      { t: 'Seguridad', sub: ['HTTPS, tokens, OAuth 2.0'] }
+    ],
+    resumen: 'Los servicios web permiten que aplicaciones distintas se comuniquen por la red de forma estándar. SOAP es un protocolo estricto basado en XML con un contrato formal (WSDL). REST es un estilo más ligero: usa los métodos HTTP (GET, POST, PUT, DELETE) sobre recursos, es sin estado y suele intercambiar JSON. REST domina hoy en las APIs web; la seguridad se apoya en HTTPS y OAuth 2.0.',
+    clave: ['SOAP (XML, WSDL, estricto) vs REST (HTTP, JSON, sin estado)', 'REST: GET/POST/PUT/DELETE sobre recursos', 'Seguridad: HTTPS, OAuth 2.0']
+  },
+  'B3-T7.1.1': {
+    esquema: [
+      { t: 'Qué es', sub: ['Lenguaje de marcado para estructurar páginas web (no es de programación)'] },
+      { t: 'Estructura', sub: ['<!DOCTYPE html>, <html>, <head> (metadatos), <body> (contenido)'] },
+      { t: 'Etiquetas semánticas (HTML5)', sub: ['<header>, <nav>, <main>, <section>, <article>, <footer>'] },
+      { t: 'Elementos habituales', sub: ['Texto, enlaces, imágenes, listas, tablas, formularios'] }
+    ],
+    resumen: 'HTML es el lenguaje de marcado que estructura el contenido de las páginas web mediante etiquetas. Un documento tiene <head> (metadatos, título, enlaces a CSS/JS) y <body> (contenido visible). HTML5 incorporó etiquetas semánticas (header, nav, main, section, article, footer) que describen el significado de cada parte, mejorando accesibilidad y SEO. Se ocupa de la estructura; el estilo lo pone CSS y el comportamiento JavaScript.',
+    clave: ['<!DOCTYPE html> · <head> / <body>', 'Semántica HTML5: header, nav, main, section, footer', 'Estructura (HTML) + estilo (CSS) + comportamiento (JS)']
+  },
+  'B3-T7.1.2': {
+    esquema: [
+      { t: 'Chuleta rápida (esenciales)', sub: ['Estructura y texto', 'Enlaces, imágenes, listas'] }
+    ],
+    resumen: 'Referencia rápida de las etiquetas HTML más habituales.',
+    clave: ['<h1>…<h6>, <p>, <br>, <strong>, <em>', '<a href="url">texto</a>', '<img src="img.jpg" alt="descripción">', '<ul><li>…</li></ul> · <ol><li>…</li></ol>', '<div>, <span>']
+  },
+  'B3-T7.1.3': {
+    esquema: [
+      { t: 'Chuleta ampliada', sub: ['Semántica, formularios, tablas y atributos'] }
+    ],
+    resumen: 'Referencia HTML más completa: semántica, formularios y tablas.',
+    clave: ['Semántica: <header> <nav> <main> <section> <article> <footer>', 'Formulario: <form> <input> <label> <select> <textarea> <button>', 'Tabla: <table> <thead> <tbody> <tr> <th> <td>', 'Atributos: id, class, href, src, alt, type, name']
+  },
+  'B3-T7.2.1': {
+    esquema: [
+      { t: 'Qué es', sub: ['Hojas de estilo en cascada: dan aspecto a la página'] },
+      { t: 'Cómo incluirlo', sub: ['Externo (<link>), interno (<style>) o en línea (atributo style)'] },
+      { t: 'Fundamentos', sub: ['Selectores, modelo de caja (margin/border/padding/content)', 'Cascada y especificidad'] },
+      { t: 'Maquetación', sub: ['Flexbox, Grid, y media queries (diseño responsive)'] }
+    ],
+    resumen: 'CSS controla la presentación de las páginas (colores, tipografías, posición). Se aplica con selectores a los elementos y se puede incluir de forma externa (recomendado), interna o en línea. Conceptos clave: el modelo de caja (contenido + padding + borde + margen), la cascada y la especificidad (qué regla gana). Para maquetar se usan Flexbox y Grid, y las media queries permiten el diseño responsive adaptable a cada pantalla.',
+    clave: ['selector { propiedad: valor; }', 'Modelo de caja: content, padding, border, margin', 'Cascada y especificidad', 'Flexbox · Grid · media queries (responsive)']
+  },
+  'B3-T7.2.2': {
+    esquema: [
+      { t: 'Chuleta rápida (esenciales)', sub: ['Propiedades más usadas'] }
+    ],
+    resumen: 'Referencia rápida de las propiedades CSS más habituales.',
+    clave: ['color · background · font-size · font-family', 'margin · padding · border', 'width · height · display', 'Selectores: elemento · .clase · #id']
+  },
+  'B3-T7.2.3': {
+    esquema: [
+      { t: 'Chuleta ampliada', sub: ['Flexbox, Grid y responsive'] }
+    ],
+    resumen: 'Referencia CSS ampliada: Flexbox, Grid y media queries.',
+    clave: ['display: flex · justify-content · align-items · gap', 'display: grid · grid-template-columns · gap', 'position: relative/absolute/fixed/sticky', '@media (max-width: 600px) { … }']
+  },
+  'B3-T7.3.1': {
+    esquema: [
+      { t: 'Qué es', sub: ['Lenguaje de marcado extensible para representar y transportar datos'] },
+      { t: 'Características', sub: ['Etiquetas definidas por el usuario, estructura jerárquica (árbol)', 'Separa datos de presentación'] },
+      { t: 'Tecnologías asociadas', sub: ['DTD y XSD (definición/validación del esquema)', 'XPath (localizar nodos), XSLT (transformar), namespaces'] },
+      { t: 'Alternativa', sub: ['JSON (más ligero, habitual en APIs web)'] }
+    ],
+    resumen: 'XML es un lenguaje de marcado extensible pensado para almacenar e intercambiar datos entre sistemas, con etiquetas que define el propio usuario y estructura jerárquica. Su esquema se define y valida con DTD o XSD; XPath localiza partes del documento y XSLT lo transforma (por ejemplo, a HTML). Frente a XML, JSON es más ligero y se ha impuesto en las APIs web, aunque XML sigue siendo común en configuración y documentos.',
+    clave: ['Etiquetas propias · estructura jerárquica', 'Esquema: DTD / XSD · XPath · XSLT', 'Namespaces', 'Alternativa ligera: JSON']
+  },
+  'B3-T7.3.2': {
+    esquema: [
+      { t: 'Bien formado (well-formed)', sub: ['Un único elemento raíz', 'Todas las etiquetas se cierran y anidan correctamente', 'Sensible a mayúsculas/minúsculas', 'Valores de atributo entre comillas'] },
+      { t: 'Válido (valid)', sub: ['Además, cumple un DTD o XSD'] }
+    ],
+    resumen: 'Un documento XML está "bien formado" si respeta las reglas sintácticas: un solo elemento raíz, etiquetas correctamente cerradas y anidadas, sensibilidad a mayúsculas y atributos entrecomillados. Un documento es "válido" si, además de estar bien formado, cumple las reglas de un esquema (DTD o XSD). Todo XML válido está bien formado, pero no al revés.',
+    clave: ['Bien formado ≠ válido', 'Bien formado: raíz única, etiquetas cerradas y anidadas, comillas', 'Válido: cumple además DTD/XSD']
+  },
+  'B3-T7.4a': {
+    esquema: [
+      { t: 'Qué es', sub: ['JavaScript: lenguaje del lado del cliente (navegador)'] },
+      { t: 'Fundamentos', sub: ['Variables (var/let/const), tipos, funciones, objetos', 'DOM: acceder y modificar la página; eventos'] },
+      { t: 'Comunicación', sub: ['AJAX / fetch (peticiones al servidor sin recargar)'] },
+      { t: 'Frameworks', sub: ['React, Angular, Vue'] }
+    ],
+    resumen: 'El scripting de front-end se hace con JavaScript, que se ejecuta en el navegador y da comportamiento a la página. Permite manipular el DOM (la estructura de la página), responder a eventos del usuario y comunicarse con el servidor de forma asíncrona (AJAX/fetch) sin recargar. Para aplicaciones complejas se usan frameworks como React, Angular o Vue.',
+    clave: ['JavaScript en el navegador (cliente)', 'DOM + eventos · let/const/funciones', 'AJAX / fetch (asíncrono)', 'Frameworks: React, Angular, Vue']
+  },
+  'B3-T7.4b': {
+    esquema: [
+      { t: 'Chuleta JavaScript', sub: ['Sintaxis esencial y DOM'] }
+    ],
+    resumen: 'Referencia rápida de JavaScript.',
+    clave: ['let x = 1; const y = 2;', 'const f = (a) => a * 2;', "document.querySelector('.clase')", "el.addEventListener('click', fn)", 'fetch(url).then(r => r.json())', 'arr.map / filter / forEach']
+  },
+  'B3-T7.5': {
+    esquema: [
+      { t: 'Qué es', sub: ['Scripting del lado del servidor: genera respuestas dinámicas'] },
+      { t: 'Lenguajes', sub: ['PHP, Node.js (JavaScript en el servidor), Python, Java, C#'] },
+      { t: 'Funciones', sub: ['Genera HTML dinámico, accede a BBDD, gestiona sesiones y APIs'] },
+      { t: 'Ejecución', sub: ['El código corre en el servidor; al cliente solo llega el resultado (HTML/JSON)'] }
+    ],
+    resumen: 'El scripting de back-end se ejecuta en el servidor y genera las respuestas de forma dinámica: construye el HTML, consulta la base de datos, gestiona sesiones y expone APIs. Lenguajes típicos: PHP (muy usado en web), Node.js (JavaScript en el servidor), Python, Java o C#. A diferencia del front-end, el usuario nunca ve el código: solo recibe el resultado (una página HTML o datos JSON).',
+    clave: ['Se ejecuta en el SERVIDOR', 'PHP, Node.js, Python, Java, C#', 'Genera HTML dinámico y accede a la BBDD', 'Front (navegador) vs Back (servidor)']
+  },
+  'B3-T8': {
+    esquema: [
+      { t: 'Qué es', sub: ['Que las webs y apps sean usables por todas las personas, incluidas con discapacidad'] },
+      { t: 'WCAG', sub: ['Pautas WCAG · niveles A, AA y AAA (AA es el exigido al sector público)'] },
+      { t: 'Principios POUR', sub: ['Perceptible, Operable, Comprensible (Understandable), Robusto'] },
+      { t: 'Técnicas', sub: ['Texto alternativo (alt), contraste, navegación por teclado, WAI-ARIA'] },
+      { t: 'Normativa (España)', sub: ['RD 1112/2018 (webs y apps del sector público), norma UNE-EN 301549'] }
+    ],
+    resumen: 'La accesibilidad web busca que cualquier persona, incluidas las que tienen alguna discapacidad, pueda usar los sitios y aplicaciones. Se rige por las pautas WCAG, con tres niveles (A, AA, AAA), siendo el AA el exigido al sector público. Sus cuatro principios son POUR: Perceptible, Operable, Comprensible y Robusto. En la práctica: textos alternativos en imágenes, buen contraste, navegación por teclado y WAI-ARIA. En España la exige el RD 1112/2018 (norma UNE-EN 301549).',
+    clave: ['WCAG · niveles A / AA / AAA (AA obligatorio sector público)', 'POUR: Perceptible, Operable, Comprensible, Robusto', 'alt, contraste, teclado, WAI-ARIA', 'España: RD 1112/2018 · UNE-EN 301549']
+  },
+  'B3-T9': {
+    esquema: [
+      { t: 'Metodologías tradicionales', sub: ['Cascada (waterfall) y modelo en V (secuenciales)', 'MÉTRICA v3 (metodología pública española)'] },
+      { t: 'Metodologías ágiles', sub: ['Scrum: roles (Product Owner, Scrum Master, equipo), sprints, backlog', 'Kanban (flujo/tablero) y XP (Extreme Programming)'] },
+      { t: 'Control de versiones', sub: ['Git (distribuido): commit, branch, merge, pull request', 'Repositorios: GitHub, GitLab · centralizados: SVN, CVS'] }
+    ],
+    resumen: 'Las metodologías de desarrollo pueden ser tradicionales/secuenciales (cascada, modelo en V, y la pública MÉTRICA v3) o ágiles, que entregan valor de forma iterativa: Scrum (sprints, con Product Owner, Scrum Master y equipo), Kanban y XP. El control de versiones registra la evolución del código: Git es distribuido (cada copia es un repositorio completo, con commits, ramas y merges) y se usa con plataformas como GitHub o GitLab; SVN/CVS eran centralizados.',
+    clave: ['Cascada / modelo en V · MÉTRICA v3', 'Ágiles: Scrum (sprints), Kanban, XP', 'Scrum: Product Owner, Scrum Master, equipo', 'Git (distribuido): commit, branch, merge · GitHub/GitLab']
+  }
+});
+
 function openFicha(id) {
   const f = FICHAS[id];
   if (!f) return;
