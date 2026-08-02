@@ -338,6 +338,9 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.28); max-width: 616px; margin: 0 auto;
   }
   .mini-timer.active { display: flex; }
+  /* Hueco extra al final para que la mini-barra no tape el contenido (ej. el enlace de la mini-ventana). */
+  body.timer-running { padding-bottom: calc(135px + var(--safe-bottom)); }
+  @media (max-width: 480px) { body.timer-running { padding-bottom: calc(190px + var(--safe-bottom)); } }
   .mini-left { display: flex; align-items: center; gap: 9px; min-width: 0; overflow: hidden; }
   .mini-time { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; cursor: pointer; border-bottom: 1px dotted rgba(255,255,255,0.6); }
   .mini-sub { font-size: 13px; opacity: 0.9; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2455,6 +2458,7 @@ function onSessionUpdate() {
       return;
     }
     document.getElementById('mini-timer').classList.add('active');
+    document.body.classList.add('timer-running');
     requestWake();
     renderMini();
     if (!timerInterval) timerInterval = setInterval(tickSync, 250);
@@ -2465,6 +2469,7 @@ function onSessionUpdate() {
 }
 function hideMiniTimer() {
   document.getElementById('mini-timer').classList.remove('active');
+  document.body.classList.remove('timer-running');
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   lastPhaseIdx = -1;
   releaseWake();
