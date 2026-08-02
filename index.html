@@ -1029,7 +1029,8 @@ function renderTopicsList(block) {
       sub = (ds === 0 ? 'Estudiado hoy' : `Hace ${ds} día${ds===1?'':'s'}`) + ` · ${dates.length}×`;
     }
     const row = document.createElement('div');
-    row.className = 'topic-row' + (studiedToday ? ' done' : '');
+    // Verde si el tema se ha estudiado alguna vez (marca persistente de "ya visto").
+    row.className = 'topic-row' + (dates.length > 0 ? ' done' : '');
     row.innerHTML = `
       <div class="topic-info"><div class="topic-name"></div><div class="topic-sub">${sub}</div></div>
       ${FICHAS[t.id] ? '<button class="topic-ficha" title="Ver ficha">📄</button>' : ''}
