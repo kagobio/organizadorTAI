@@ -2314,13 +2314,30 @@ function updateTodayTime() {
 }
 // Acumula el tiempo estudiado en el día al terminar/parar una sesión.
 let lastCreditedStart = null;
+// Suma el tiempo de la sesión UNA sola vez, aunque haya varios dispositivos abiertos.
 function recordStudyTime(session, endNow) {
   if (!session || !session.segments) return;
-  if (session.start === lastCreditedStart) return;   // evita sumar dos veces la misma sesión
-  lastCreditedStart = session.start;
   const secs = studiedSeconds(session, endNow);
-  if (secs <= 0) return;
+  if (secs <= 0) { lastCreditedStart = session.start; return; }
   const key = keyOf(new Date());
+  const sid = String(session.start);          // identificador único de la sesión
+  if (!db || !docRef) { creditLocal(key, secs, session.start); return; }
+  // Transacción: comprueba si esa sesión ya se contó y, si no, la suma de forma atómica.
+  db.runTransaction(tx => tx.get(docRef).then(doc => {
+    const data = doc.data() || {};
+    const credited = data.creditedSessions || {};
+    if (credited[sid]) return;                // ya la contó otro dispositivo
+    const logs = data.logs || {};
+    const day = logs[key] || {};
+    day.secs = (day.secs || 0) + secs;
+    credited[sid] = true;
+    tx.update(docRef, { ['logs.' + key]: day, creditedSessions: credited });
+  })).then(() => { lastCreditedStart = session.start; setTimeout(updateTodayTime, 400); })
+     .catch(() => creditLocal(key, secs, session.start));   // sin conexión: respaldo local
+}
+function creditLocal(key, secs, start) {
+  if (start === lastCreditedStart) return;
+  lastCreditedStart = start;
   if (!state.logs[key]) state.logs[key] = emptyDay();
   state.logs[key].secs = ((state.logs[key].secs) || 0) + secs;
   pushToCloud({ logs: { [key]: state.logs[key] } });
