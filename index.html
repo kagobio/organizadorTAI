@@ -1893,6 +1893,42 @@ Object.assign(FICHAS, {
   }
 });
 
+// Cuadernos de ejercicios de subnetting (alumno sin soluciones, profesor con) + práctica del domingo.
+const SUBNET_PRACTICE = { label: '🧮 Practicar subnetting online', url: 'https://subnettingpractice.com/' };
+Object.assign(FICHAS, {
+  'B4-T7.3a': {
+    esquema: [
+      { t: 'Qué es', sub: ['Cuaderno de ejercicios de direccionamiento IP y subnetting — versión ALUMNO (sin soluciones)'] },
+      { t: 'Estructura IPv4', sub: ['32 bits, 4 octetos (ej. 192.168.1.10) · red + host (la máscara los separa)'] },
+      { t: 'Clases', sub: ['A /8 (1–126) · B /16 (128–191) · C /24 (192–223) · D multicast · E reservada'] },
+      { t: 'Subnetting', sub: ['Notación /n (CIDR) · VLSM (subredes de tamaño variable)', 'Hosts útiles = 2^(bits host) − 2', 'Subredes = 2^(bits prestados)'] },
+      { t: 'Privadas', sub: ['10.0.0.0/8 · 172.16.0.0/12 · 192.168.0.0/16'] }
+    ],
+    resumen: 'Es el cuaderno de ejercicios de direccionamiento IP y subnetting en su versión de ALUMNO (sin las soluciones): para practicar. Método: decide cuántos bits robas a la parte de host para crear subredes (2^prestados subredes), calcula los hosts útiles por subred (2^host − 2, se restan red y broadcast) y determina la dirección de red, primer host, último host y broadcast de cada una. Un /24 tiene 254 hosts útiles. Cuando termines, corrige con el "Libro profesor" (que sí trae las respuestas).',
+    clave: ['/24 = 256 direcciones, 254 hosts útiles', 'Hosts útiles = 2^(bits host) − 2', 'Subredes = 2^(bits prestados)', 'Privadas: 10/8, 172.16/12, 192.168/16'],
+    practice: SUBNET_PRACTICE
+  },
+  'B4-T7.3b': {
+    esquema: [
+      { t: 'Qué es', sub: ['Mismo cuaderno de ejercicios — versión PROFESOR (CON soluciones)'] },
+      { t: 'Uso', sub: ['Corrige aquí los ejercicios que hayas hecho en el "Libro alumno"'] },
+      { t: 'Fórmulas para repasar', sub: ['Subredes = 2^(bits prestados) · Hosts útiles = 2^(bits host) − 2', '/24 = máscara 255.255.255.0 (254 hosts útiles)'] }
+    ],
+    resumen: 'Es la versión con SOLUCIONES del mismo cuaderno de ejercicios de subnetting: úsala para corregir lo que hayas resuelto en el "Libro alumno" y comprobar los pasos. Recuerda el orden: bits prestados → nº de subredes (2^prestados) → hosts útiles por subred (2^host − 2) → red, primer host, último host y broadcast de cada subred.',
+    clave: ['Corrige el "Libro alumno" con estas soluciones', 'Subredes = 2^(prestados) · Hosts = 2^(host) − 2', '/24 = 255.255.255.0'],
+    practice: SUBNET_PRACTICE
+  },
+  'REP-subnetting': {
+    esquema: [
+      { t: 'Método (paso a paso)', sub: ['1) Bits que pides prestados a la parte de host', '2) Nº de subredes = 2^(bits prestados)', '3) Hosts útiles por subred = 2^(bits host) − 2', '4) Red, primer host, último host y broadcast de cada subred'] },
+      { t: 'Referencia', sub: ['Clases A/B/C · CIDR /n · VLSM', 'Privadas: 10/8, 172.16/12, 192.168/16'] }
+    ],
+    resumen: 'El domingo toca practicar subnetting (cálculo de subredes). Repaso del método: decides cuántos bits robas a los hosts (cada bit prestado duplica las subredes: 2^prestados), calculas los hosts útiles por subred (2^host − 2) y hallas red, primer y último host y broadcast. Practica con los cuadernos "Libro alumno/profesor" (B4-T7.3) y con ejercicios reales en la web de abajo.',
+    clave: ['Subredes = 2^(bits prestados)', 'Hosts útiles = 2^(bits host) − 2', '/24 = 254 hosts · máscara 255.255.255.0'],
+    practice: SUBNET_PRACTICE
+  }
+});
+
 function openFicha(id) {
   const f = FICHAS[id];
   if (!f) return;
@@ -1923,6 +1959,13 @@ function openFicha(id) {
     const box = document.createElement('div'); box.className = 'ficha-key';
     f.clave.forEach(k => { const d = document.createElement('div'); d.className = 'k'; d.textContent = k; box.appendChild(d); });
     body.appendChild(box);
+  }
+  if (f.practice) {
+    const pb = document.createElement('button');
+    pb.style.cssText = 'width:100%;padding:13px;border-radius:12px;font-size:16px;font-weight:600;margin-top:18px;background:var(--accent);color:#fff;border:0;cursor:pointer;';
+    pb.textContent = f.practice.label;
+    pb.onclick = () => window.open(f.practice.url, '_blank');
+    body.appendChild(pb);
   }
   const note = document.createElement('div');
   note.style.cssText = 'font-size:12px;color:var(--text-secondary);margin-top:16px;';
