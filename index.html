@@ -2298,7 +2298,7 @@ function studiedSeconds(session, now) {
 function studiedSecondsToday() {
   const key = keyOf(new Date());
   const base = (state.logs[key] && state.logs[key].secs) || 0;
-  const live = state.session ? Math.round(state.session.studied || 0) : 0;
+  const live = state.session ? studiedSeconds(state.session, Date.now()) : 0;
   return base + live;
 }
 function formatDuration(secs) {
@@ -2317,7 +2317,7 @@ let lastCreditedStart = null;
 // Suma el tiempo de la sesión UNA sola vez, aunque haya varios dispositivos abiertos.
 function recordStudyTime(session, endNow) {
   if (!session || !session.segments) return;
-  const secs = Math.round(session.studied || 0);   // tiempo real observado con la app abierta
+  const secs = studiedSeconds(session, endNow);   // tiempo de los bloques de estudio transcurridos
   if (secs <= 0) { lastCreditedStart = session.start; return; }
   const key = keyOf(new Date());
   const sid = String(session.start);          // identificador único de la sesión
@@ -2519,18 +2519,6 @@ function tickSync() {
   }
   if (lastPhaseIdx !== -1 && st.idx !== lastPhaseIdx) beep(st.seg.type);
   lastPhaseIdx = st.idx;
-  // Acumula SOLO el tiempo real con la app abierta (los huecos de app cerrada no cuentan).
-  const nowT = Date.now();
-  if (lastTickTime !== null) {
-    const delta = (nowT - lastTickTime) / 1000;
-    if (delta > 0 && delta < 3 && !state.session.pausedAt && st.seg.type === 'work') {
-      state.session.studied = (state.session.studied || 0) + delta;
-    }
-  }
-  lastTickTime = nowT;
-  if (nowT - lastStudiedPush > 20000 && docRef) {  // sincroniza el acumulado cada ~20s (silencioso)
-    lastStudiedPush = nowT; saveSessionLocal(); docRef.set({ session: state.session }, { merge: true }).catch(() => {});
-  }
   const segs = state.session.segments;
   const totalWork = segs.filter(s => s.type === 'work').length;
   const workDone = segs.slice(0, st.idx + 1).filter(s => s.type === 'work').length;
