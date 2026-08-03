@@ -121,6 +121,23 @@
   .ficha-key { background: var(--bg-elevated); border-radius: 12px; padding: 12px 14px; }
   .ficha-key .k { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 13px; margin: 5px 0; color: var(--text); }
 
+  /* ---- Impresión de fichas ---- */
+  #print-area { display: none; }
+  @media print {
+    body.printing > *:not(#print-area) { display: none !important; }
+    body.printing #print-area { display: block !important; color: #000; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+    .pf-h1 { font-size: 19pt; margin: 0 0 14pt; }
+    .pf-card { break-inside: avoid; page-break-inside: avoid; margin-bottom: 14pt; padding-bottom: 8pt; border-bottom: 1px solid #bbb; }
+    .pf-h2 { font-size: 13.5pt; margin: 0; }
+    .pf-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5pt; color: #555; margin: 9pt 0 3pt; }
+    .pf-scheme { margin: 0; padding-left: 15pt; }
+    .pf-scheme ul { padding-left: 14pt; margin: 2pt 0; }
+    .pf-scheme li { font-size: 10pt; margin: 1.5pt 0; }
+    .pf-p { margin: 0; font-size: 10.5pt; line-height: 1.4; }
+    .pf-key { margin: 0; padding-left: 15pt; }
+    .pf-key li { font-family: "Consolas", monospace; font-size: 9.5pt; margin: 1.5pt 0; }
+  }
+
   /* ---- Repasos ---- */
   .repaso-hint { font-size: 14px; color: var(--text-secondary); margin: 0 4px 16px; }
   .repaso-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; margin-bottom: 10px; background: var(--card); border: 1px solid var(--separator); border-radius: 14px; cursor: pointer; }
@@ -589,6 +606,7 @@
   <div class="sheet">
     <h2 id="topics-title">Temas del bloque</h2>
     <div id="topics-suggest" class="countdown-sub" style="margin-top:-8px;"></div>
+    <button id="topics-print" onclick="printBlockFichas(topicsBlock)" style="display:none;width:100%;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin:6px 0 10px;background:var(--bg-elevated);color:var(--accent);border:0;cursor:pointer;">🖨️ Imprimir fichas del bloque</button>
     <div id="topics-list"></div>
     <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closeTopicsSheet()">Cerrar</button>
   </div>
@@ -610,6 +628,8 @@
     <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closePlanSheet()">Cerrar</button>
   </div>
 </div>
+
+<div id="print-area"></div>
 
 <!-- ==================== MINI-VENTANA DEL CRONÓMETRO ==================== -->
 <div id="mini-view">
@@ -999,6 +1019,7 @@ function openTopicsSheet(block) {
   block = block || blockFor(new Date());
   topicsBlock = block;
   document.getElementById('topics-title').textContent = 'Temas de ' + block;
+  document.getElementById('topics-print').style.display = (TOPICS[block] || []).some(t => FICHAS[t.id]) ? 'block' : 'none';
   renderTopicsSuggest(block);
   renderTopicsList(block);
   document.getElementById('topics-backdrop').classList.add('active');
@@ -1975,6 +1996,38 @@ function openFicha(id) {
   document.getElementById('ficha-backdrop').classList.add('active');
 }
 function closeFicha() { document.getElementById('ficha-backdrop').classList.remove('active'); }
+function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// Genera un documento con TODAS las fichas del bloque y abre el diálogo de imprimir / Guardar como PDF.
+function printBlockFichas(block) {
+  const list = (TOPICS[block] || []).filter(t => FICHAS[t.id]);
+  if (!list.length) { alert('Este bloque todavía no tiene fichas.'); return; }
+  let html = `<h1 class="pf-h1">${escapeHtml(block)} · Fichas de estudio</h1>`;
+  list.forEach(t => {
+    const f = FICHAS[t.id];
+    html += `<section class="pf-card"><h2 class="pf-h2">${escapeHtml(t.name)}</h2>`;
+    html += `<div class="pf-label">Esquema</div><ul class="pf-scheme">`;
+    f.esquema.forEach(it => {
+      html += `<li><b>${escapeHtml(it.t)}</b>`;
+      if (it.sub && it.sub.length) { html += '<ul>'; it.sub.forEach(s => { html += `<li>${escapeHtml(s)}</li>`; }); html += '</ul>'; }
+      html += `</li>`;
+    });
+    html += `</ul>`;
+    html += `<div class="pf-label">Resumen funcional</div><p class="pf-p">${escapeHtml(f.resumen)}</p>`;
+    if (f.clave && f.clave.length) {
+      html += `<div class="pf-label">Clave</div><ul class="pf-key">`;
+      f.clave.forEach(k => { html += `<li>${escapeHtml(k)}</li>`; });
+      html += `</ul>`;
+    }
+    html += `</section>`;
+  });
+  const area = document.getElementById('print-area');
+  area.innerHTML = html;
+  document.body.classList.add('printing');
+  const cleanup = () => { document.body.classList.remove('printing'); area.innerHTML = ''; window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(cleanup, 60000); // respaldo por si el navegador no dispara afterprint
+  window.print();
+}
 
 // ============ Enlace del test ============
 // Enlace fijo para el domingo (repaso de Linux en una Debian online).
