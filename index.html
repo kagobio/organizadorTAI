@@ -1997,36 +1997,59 @@ function openFicha(id) {
 }
 function closeFicha() { document.getElementById('ficha-backdrop').classList.remove('active'); }
 function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-// Genera un documento con TODAS las fichas del bloque y abre el diálogo de imprimir / Guardar como PDF.
+// Genera un documento limpio (vertical) con TODAS las fichas del bloque en una ventana aparte, listo para imprimir / Guardar como PDF.
 function printBlockFichas(block) {
   const list = (TOPICS[block] || []).filter(t => FICHAS[t.id]);
   if (!list.length) { alert('Este bloque todavía no tiene fichas.'); return; }
-  let html = `<h1 class="pf-h1">${escapeHtml(block)} · Fichas de estudio</h1>`;
+
+  let cards = '';
   list.forEach(t => {
     const f = FICHAS[t.id];
-    html += `<section class="pf-card"><h2 class="pf-h2">${escapeHtml(t.name)}</h2>`;
-    html += `<div class="pf-label">Esquema</div><ul class="pf-scheme">`;
+    let s = '<article class="card"><h2>' + escapeHtml(t.name) + '</h2>';
+    s += '<div class="label">Esquema</div><ul class="scheme">';
     f.esquema.forEach(it => {
-      html += `<li><b>${escapeHtml(it.t)}</b>`;
-      if (it.sub && it.sub.length) { html += '<ul>'; it.sub.forEach(s => { html += `<li>${escapeHtml(s)}</li>`; }); html += '</ul>'; }
-      html += `</li>`;
+      s += '<li><strong>' + escapeHtml(it.t) + '</strong>';
+      if (it.sub && it.sub.length) { s += '<ul>'; it.sub.forEach(x => { s += '<li>' + escapeHtml(x) + '</li>'; }); s += '</ul>'; }
+      s += '</li>';
     });
-    html += `</ul>`;
-    html += `<div class="pf-label">Resumen funcional</div><p class="pf-p">${escapeHtml(f.resumen)}</p>`;
+    s += '</ul>';
+    s += '<div class="label">Resumen funcional</div><p class="resumen">' + escapeHtml(f.resumen) + '</p>';
     if (f.clave && f.clave.length) {
-      html += `<div class="pf-label">Clave</div><ul class="pf-key">`;
-      f.clave.forEach(k => { html += `<li>${escapeHtml(k)}</li>`; });
-      html += `</ul>`;
+      s += '<div class="label">Clave</div><div class="key">';
+      f.clave.forEach(k => { s += '<div>' + escapeHtml(k) + '</div>'; });
+      s += '</div>';
     }
-    html += `</section>`;
+    s += '</article>';
+    cards += s;
   });
-  const area = document.getElementById('print-area');
-  area.innerHTML = html;
-  document.body.classList.add('printing');
-  const cleanup = () => { document.body.classList.remove('printing'); area.innerHTML = ''; window.removeEventListener('afterprint', cleanup); };
-  window.addEventListener('afterprint', cleanup);
-  setTimeout(cleanup, 60000); // respaldo por si el navegador no dispara afterprint
-  window.print();
+
+  const styles = `
+    @page { size: A4 portrait; margin: 16mm 14mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #14181f; font-size: 11pt; line-height: 1.45; }
+    header h1 { font-size: 18pt; margin: 0 0 3pt; }
+    header .sub { color: #667; font-size: 9.5pt; margin: 0 0 16pt; padding-bottom: 8pt; border-bottom: 2px solid #0a61d0; }
+    .card { break-inside: avoid; page-break-inside: avoid; margin-bottom: 13pt; padding-bottom: 9pt; border-bottom: 1px solid #d5dae1; }
+    .card:last-child { border-bottom: 0; }
+    .card h2 { font-size: 13pt; color: #0a61d0; margin: 0; }
+    .label { font-size: 8pt; font-weight: 700; letter-spacing: .5pt; text-transform: uppercase; color: #7a828c; margin: 9pt 0 3pt; }
+    ul.scheme { margin: 0; padding-left: 15pt; }
+    ul.scheme > li { margin: 2pt 0; }
+    ul.scheme ul { margin: 1pt 0 3pt; padding-left: 14pt; }
+    ul.scheme ul li { color: #4a5560; font-size: 10pt; }
+    p.resumen { margin: 0; font-size: 10.5pt; }
+    .key { background: #f3f5f8; border: 1px solid #e2e7ee; border-radius: 4pt; padding: 6pt 9pt; }
+    .key div { font-family: "Consolas", "Courier New", monospace; font-size: 9pt; margin: 2pt 0; color: #1a2733; }
+  `;
+  const doc = '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>' + escapeHtml(block) + ' - Fichas TAI</title><style>' + styles + '</style></head><body><header><h1>' + escapeHtml(block) + ' · Fichas de estudio</h1><div class="sub">Oposición TAI · ' + list.length + ' temas · guía de estudio (verifica con el temario oficial)</div></header>' + cards + '</body></html>';
+
+  const w = window.open('', '_blank');
+  if (!w) { alert('Permite las ventanas emergentes para poder imprimir.'); return; }
+  w.document.open();
+  w.document.write(doc);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { try { w.print(); } catch (e) {} }, 500);
 }
 
 // ============ Enlace del test ============
