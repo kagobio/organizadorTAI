@@ -2591,8 +2591,8 @@ function computeSession(session, now) {
 function onSessionUpdate() {
   if (state.session && state.session.segments) {
     if (computeSession(state.session, Date.now()).finished) {
-      recordStudyTime(state.session, Date.now());
-      state.session = null;      // sesión ya caducada: limpiar sin avisar
+      // Sesión terminada con la app cerrada: limpiar SIN contar tiempo (evita tiempo fantasma).
+      state.session = null;
       saveSessionLocal();
       pushToCloud({ session: null });
       hideMiniTimer();
