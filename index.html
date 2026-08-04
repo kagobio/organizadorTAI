@@ -406,6 +406,7 @@
     </div>
     <div class="block-emoji" id="hoy-block-emoji">📘</div>
   </div>
+  <a class="link-edit" onclick="openBlockPicker()">✏️ Cambiar el bloque de hoy</a>
 
   <div class="section-label">Tareas de hoy</div>
   <div class="checklist" id="hoy-checklist"></div>
@@ -532,6 +533,22 @@
       <button class="btn-cancel" onclick="closeExamSheet()">Cancelar</button>
       <button class="btn-save" onclick="saveExamDate()">Guardar</button>
     </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop center-mode" id="blockpicker-backdrop" onclick="if(event.target===this)closeBlockPicker()">
+  <div class="sheet centered">
+    <h2>Bloque de hoy</h2>
+    <div class="countdown-sub" style="margin-bottom:14px;">Elige qué bloque quieres estudiar hoy (solo cambia el día de hoy).</div>
+    <div class="timer-options">
+      <button class="timer-opt" onclick="setBlockOverride('Bloque 1')">Bloque 1 · Organización del Estado</button>
+      <button class="timer-opt" onclick="setBlockOverride('Bloque 2')">Bloque 2 · Fundamentos y SSOO</button>
+      <button class="timer-opt" onclick="setBlockOverride('Bloque 3')">Bloque 3 · Desarrollo</button>
+      <button class="timer-opt" onclick="setBlockOverride('Bloque 4')">Bloque 4 · Sistemas y redes</button>
+      <button class="timer-opt" onclick="setBlockOverride('Repaso')">Repaso</button>
+    </div>
+    <a class="link-edit" style="margin-top:14px;" onclick="resetBlockOverride()">↩︎ Volver al que toca por defecto</a>
+    <button class="btn-cancel" style="width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:600;margin-top:10px;" onclick="closeBlockPicker()">Cancelar</button>
   </div>
 </div>
 
@@ -669,7 +686,7 @@ try {
 }
 
 // ============ Estado en memoria ============
-let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '', topics: {}, session: null };
+let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '', topics: {}, session: null, overrides: {} };
 const logs = () => state.logs;
 
 // ============ Persistencia ============
@@ -693,6 +710,7 @@ function subscribeCloud() {
       state.examStart = d.examStart || '';
       state.topics = d.topics || {};
       state.session = d.session || null;
+      state.overrides = d.overrides || {};
       saveSessionLocal();
       remoteReady = true;
       showSync('Sincronizado ✓', true);
@@ -736,7 +754,7 @@ function blockForDay(day) {
     default: return 'Repaso';
   }
 }
-function blockFor(d) { return blockForDay(d.getDay()); }
+function blockFor(d) { return (state.overrides && state.overrides[keyOf(d)]) || blockForDay(d.getDay()); }
 const TASKS = [
   { key: 'repasar',  label: 'Repasar 20 minutos' },
   { key: 'estudiar', label: 'Estudiar el bloque correspondiente' },
@@ -2522,6 +2540,25 @@ const BLOCK_INFO = {
 };
 function openPlanSheet() { renderPlan(); document.getElementById('plan-backdrop').classList.add('active'); }
 function closePlanSheet() { document.getElementById('plan-backdrop').classList.remove('active'); }
+
+// Cambiar el bloque que toca estudiar hoy (excepción solo para hoy).
+function openBlockPicker() { document.getElementById('blockpicker-backdrop').classList.add('active'); }
+function closeBlockPicker() { document.getElementById('blockpicker-backdrop').classList.remove('active'); }
+function setBlockOverride(block) {
+  const key = keyOf(new Date());
+  if (!state.overrides) state.overrides = {};
+  state.overrides[key] = block;
+  pushToCloud({ overrides: { [key]: block } });
+  closeBlockPicker();
+  renderHoy();
+}
+function resetBlockOverride() {
+  const key = keyOf(new Date());
+  if (state.overrides) delete state.overrides[key];
+  if (docRef) docRef.update({ ['overrides.' + key]: firebase.firestore.FieldValue.delete() }).catch(() => {});
+  closeBlockPicker();
+  renderHoy();
+}
 function renderPlan() {
   const cont = document.getElementById('plan-list');
   cont.innerHTML = '';
