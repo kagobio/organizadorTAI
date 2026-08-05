@@ -536,10 +536,10 @@
   </div>
 </div>
 
-<div class="sheet-backdrop center-mode" id="blockpicker-backdrop" onclick="if(event.target===this)closeBlockPicker()">
+<div class="sheet-backdrop center-mode" id="blockpicker-backdrop" style="z-index:110;" onclick="if(event.target===this)closeBlockPicker()">
   <div class="sheet centered">
-    <h2>Bloque de hoy</h2>
-    <div class="countdown-sub" style="margin-bottom:14px;">Elige qué bloque quieres estudiar hoy (solo cambia el día de hoy).</div>
+    <h2 id="blockpicker-title">Bloque de hoy</h2>
+    <div class="countdown-sub" style="margin-bottom:14px;">Elige qué bloque estudiar ese día (solo cambia ese día).</div>
     <div class="timer-options">
       <button class="timer-opt" onclick="setBlockOverride('Bloque 1')">Bloque 1 · Organización del Estado</button>
       <button class="timer-opt" onclick="setBlockOverride('Bloque 2')">Bloque 2 · Fundamentos y SSOO</button>
@@ -615,7 +615,8 @@
     <h2 id="day-detail-title">Día</h2>
     <div id="day-detail-block" class="countdown-sub" style="margin-top:-8px;"></div>
     <div id="day-detail-tasks"></div>
-    <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:18px;" onclick="closeDayDetail()">Cerrar</button>
+    <a class="link-edit" onclick="openBlockPicker(detailDateKey)">✏️ Cambiar el bloque de este día</a>
+    <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:12px;" onclick="closeDayDetail()">Cerrar</button>
   </div>
 </div>
 
@@ -2122,11 +2123,13 @@ function renderCalendar() {
 // ============ Detalle de día ============
 function openDayDetail(date) {
   const key = keyOf(date);
+  detailDateKey = key;
   const day = logs()[key] || emptyDay();
   document.getElementById('day-detail-title').textContent =
     `${WEEKDAYS[date.getDay()].charAt(0).toUpperCase()+WEEKDAYS[date.getDay()].slice(1)} ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
+  const ov = state.overrides && state.overrides[key];
   document.getElementById('day-detail-block').textContent =
-    (state.examDate === key) ? '🎯 Día del examen' : ('Tocaba: ' + blockFor(date));
+    (state.examDate === key) ? '🎯 Día del examen' : ('Bloque: ' + blockFor(date) + (ov ? ' (cambiado)' : ''));
   const cont = document.getElementById('day-detail-tasks');
   cont.innerHTML = '';
   TASKS.forEach(t => {
@@ -2541,23 +2544,34 @@ const BLOCK_INFO = {
 function openPlanSheet() { renderPlan(); document.getElementById('plan-backdrop').classList.add('active'); }
 function closePlanSheet() { document.getElementById('plan-backdrop').classList.remove('active'); }
 
-// Cambiar el bloque que toca estudiar hoy (excepción solo para hoy).
-function openBlockPicker() { document.getElementById('blockpicker-backdrop').classList.add('active'); }
+// Cambiar el bloque de un día concreto (excepción por fecha, sincronizada).
+let pickerDateKey = null, detailDateKey = null;
+function openBlockPicker(dateKey) {
+  pickerDateKey = dateKey || keyOf(new Date());
+  document.getElementById('blockpicker-title').textContent =
+    (pickerDateKey === keyOf(new Date())) ? 'Bloque de hoy' : 'Bloque de ese día';
+  document.getElementById('blockpicker-backdrop').classList.add('active');
+}
 function closeBlockPicker() { document.getElementById('blockpicker-backdrop').classList.remove('active'); }
 function setBlockOverride(block) {
-  const key = keyOf(new Date());
+  const key = pickerDateKey || keyOf(new Date());
   if (!state.overrides) state.overrides = {};
   state.overrides[key] = block;
   pushToCloud({ overrides: { [key]: block } });
   closeBlockPicker();
-  renderHoy();
+  afterOverrideChange(key);
 }
 function resetBlockOverride() {
-  const key = keyOf(new Date());
+  const key = pickerDateKey || keyOf(new Date());
   if (state.overrides) delete state.overrides[key];
   if (docRef) docRef.update({ ['overrides.' + key]: firebase.firestore.FieldValue.delete() }).catch(() => {});
   closeBlockPicker();
+  afterOverrideChange(key);
+}
+function afterOverrideChange(key) {
   renderHoy();
+  if (document.getElementById('screen-calendario').classList.contains('active')) renderCalendar();
+  if (document.getElementById('day-backdrop').classList.contains('active') && detailDateKey === key) openDayDetail(parseDMY(key));
 }
 function renderPlan() {
   const cont = document.getElementById('plan-list');
