@@ -2656,7 +2656,11 @@ function computeSession(session, now) {
 function onSessionUpdate() {
   if (state.session && state.session.segments) {
     if (computeSession(state.session, Date.now()).finished) {
-      // Sesión terminada con la app cerrada: limpiar SIN contar tiempo (evita tiempo fantasma).
+      // Si terminó hace poco (≤20 min), cuenta el tiempo aunque la app no estuviera abierta;
+      // si es muy antigua (abandonada), se descarta para evitar tiempo fantasma.
+      const segs = state.session.segments;
+      const endedAgoMin = (Date.now() - segs[segs.length - 1].end) / 60000;
+      if (endedAgoMin <= 20) recordStudyTime(state.session, Date.now());
       state.session = null;
       saveSessionLocal();
       pushToCloud({ session: null });
