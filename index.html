@@ -1969,6 +1969,20 @@ Object.assign(FICHAS, {
   }
 });
 
+// Debian online para practicar comandos de Linux (fichas del Bloque 2 y repaso del domingo).
+const DEBIAN_PRACTICE = { label: '🐧 Practicar comandos Linux (Debian)', url: 'https://distrosea.com/es/start/debian-13.0.0-standard/' };
+['B2-T4.3.1', 'B2-T4.3.2', 'B2-T4.3.3', 'B2-T4.3.4'].forEach(id => { if (FICHAS[id]) FICHAS[id].practice = DEBIAN_PRACTICE; });
+FICHAS['REP-linux'] = {
+  esquema: [
+    { t: 'Navegación y ficheros', sub: ['ls, cd, pwd · cp, mv, rm, mkdir · cat, less, nano'] },
+    { t: 'Permisos y procesos', sub: ['chmod, chown · ps, top, kill · sudo'] },
+    { t: 'Búsqueda y paquetes', sub: ['grep, find · apt/dnf install · man'] }
+  ],
+  resumen: 'El domingo, practica de verdad los comandos de Linux: navega por el sistema de ficheros, crea y borra, cambia permisos, gestiona procesos y busca. Lo mejor es teclearlos en una terminal real: abre la Debian online de abajo y pruébalos.',
+  clave: ['ls · cd · pwd · cat · man', 'cp · mv · rm · mkdir · find · grep', 'chmod · chown · sudo · ps · top · kill', 'apt/dnf install'],
+  practice: DEBIAN_PRACTICE
+};
+
 function openFicha(id) {
   const f = FICHAS[id];
   if (!f) return;
