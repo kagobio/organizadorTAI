@@ -2129,7 +2129,7 @@ function openDayDetail(date) {
     `${WEEKDAYS[date.getDay()].charAt(0).toUpperCase()+WEEKDAYS[date.getDay()].slice(1)} ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
   const ov = state.overrides && state.overrides[key];
   document.getElementById('day-detail-block').textContent =
-    (state.examDate === key) ? '🎯 Día del examen' : ('Bloque: ' + blockFor(date) + (ov ? ' (cambiado)' : ''));
+    (state.examDate === key) ? '🎯 Día del examen' : (blockFor(date) + (ov ? ' · cambiado' : ''));
   const cont = document.getElementById('day-detail-tasks');
   cont.innerHTML = '';
   TASKS.forEach(t => {
