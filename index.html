@@ -304,6 +304,12 @@
   .res-a { font-size: 12px; color: var(--text-secondary); }
   .res-actions { display: flex; gap: 10px; padding: 14px 18px calc(14px + var(--safe-bottom)); position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--separator); max-width: 640px; margin: 0 auto; width: 100%; }
   .res-actions button { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; }
+  .ts-summary { display: flex; gap: 10px; margin-bottom: 4px; }
+  .ts-summary > div { flex: 1; background: var(--bg-elevated); border-radius: 12px; padding: 14px 6px; text-align: center; }
+  .ts-num { font-size: 24px; font-weight: 700; }
+  .ts-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .ts-sub { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin: 18px 0 8px; }
+  .ts-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
 
   .fab {
     position: fixed; right: 20px; bottom: calc(76px + var(--safe-bottom));
@@ -498,6 +504,12 @@
   <div id="test-exams"></div>
   <div class="section-label" style="margin-top:20px;">Por bloques (preguntas mezcladas)</div>
   <div id="test-blocks"></div>
+
+  <div class="section-label" style="margin-top:22px;">Repaso de fallos</div>
+  <div id="test-failed"></div>
+
+  <div class="section-label" style="margin-top:22px;">Tus estadísticas</div>
+  <div id="test-stats"></div>
 </section>
 
 <!-- ==================== ERRORES ==================== -->
@@ -786,7 +798,7 @@ try {
 }
 
 // ============ Estado en memoria ============
-let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '', topics: {}, session: null, overrides: {} };
+let state = { logs: {}, notes: [], testUrl: '', examDate: '', examStart: '', topics: {}, session: null, overrides: {}, testStats: {} };
 const logs = () => state.logs;
 
 // ============ Persistencia ============
@@ -811,6 +823,7 @@ function subscribeCloud() {
       state.topics = d.topics || {};
       state.session = d.session || null;
       state.overrides = d.overrides || {};
+      state.testStats = d.testStats || {};
       saveSessionLocal();
       remoteReady = true;
       showSync('Sincronizado ✓', true);
@@ -1096,6 +1109,10 @@ const EXAMENES = {
     {n:80,b:'Bloque 4',q:'La herramienta del CCN que proporciona visibilidad y control sobre la red es:',o:['CARMEN.','EMMA.','MONICA.','OLVIDO.'],c:1}
   ]}
 };
+
+// Índice de todas las preguntas por id (para "repasar falladas").
+const QBYID = {};
+Object.keys(EXAMENES).forEach(id => (EXAMENES[id].questions || []).forEach(q => { q.qid = id + '-' + q.n; q.exam = EXAMENES[id].name; QBYID[q.qid] = q; }));
 
 // ============ Temas por bloque y seguimiento de repasos ============
 const TOPICS = {
@@ -2826,6 +2843,7 @@ function renderTestsScreen() {
     b.onclick = () => startTest(shuffleArr(qs.slice()), bl);
     blCont.appendChild(b);
   });
+  renderTestExtras();
 }
 function startTest(list, title) {
   testState = { list, idx: 0, answers: {}, mode: testMode, title };
@@ -2882,8 +2900,65 @@ function finishTest() {
     row.querySelector('.res-q').textContent = (q.n ? q.n + '. ' : '') + q.q;
     rev.appendChild(row);
   });
+  // Guardar estadísticas (historial, % por bloque, preguntas falladas).
+  const stt = ensureTestStats();
+  stt.attempts.push({ d: keyOf(new Date()), t: ts.title, nota: +nota.toFixed(2), ok, bad, blank, total });
+  if (stt.attempts.length > 60) stt.attempts = stt.attempts.slice(-60);
+  ts.list.forEach((q, i) => {
+    const a = ts.answers[i];
+    if (a === undefined) return;
+    if (!stt.byBlock[q.b]) stt.byBlock[q.b] = { ok: 0, ans: 0 };
+    stt.byBlock[q.b].ans++;
+    if (a === q.c) { stt.byBlock[q.b].ok++; if (q.qid) delete stt.failed[q.qid]; }
+    else if (q.qid) stt.failed[q.qid] = true;
+  });
+  pushToCloud({ testStats: stt });
   window.__lastTest = ts;
   document.getElementById('test-results').classList.add('active');
+}
+function ensureTestStats() {
+  if (!state.testStats) state.testStats = {};
+  if (!state.testStats.attempts) state.testStats.attempts = [];
+  if (!state.testStats.byBlock) state.testStats.byBlock = {};
+  if (!state.testStats.failed) state.testStats.failed = {};
+  return state.testStats;
+}
+function renderTestExtras() {
+  const st = ensureTestStats();
+  // Repaso de fallos
+  const failCont = document.getElementById('test-failed');
+  const failedIds = Object.keys(st.failed).filter(id => QBYID[id]);
+  failCont.innerHTML = '';
+  if (failedIds.length) {
+    const b = document.createElement('button');
+    b.className = 'test-item';
+    b.innerHTML = '<div class="ti-name">🔁 Repasar preguntas falladas</div><span class="ti-count">' + failedIds.length + '</span>';
+    b.onclick = () => startTest(shuffleArr(failedIds.map(id => QBYID[id])), 'Preguntas falladas');
+    failCont.appendChild(b);
+  } else {
+    failCont.innerHTML = '<div class="test-hint" style="margin:0;">Aún no hay preguntas falladas. Las que falles en un test aparecerán aquí para repasarlas.</div>';
+  }
+  // Estadísticas
+  const cont = document.getElementById('test-stats');
+  const at = st.attempts;
+  if (!at.length) { cont.innerHTML = '<div class="test-hint" style="margin:0;">Haz tu primer test para ver tus estadísticas.</div>'; return; }
+  const notas = at.map(a => a.nota);
+  const media = notas.reduce((x, y) => x + y, 0) / notas.length;
+  const mejor = Math.max.apply(null, notas);
+  let html = '<div class="ts-summary"><div><div class="ts-num">' + at.length + '</div><div class="ts-lbl">tests</div></div>' +
+    '<div><div class="ts-num">' + media.toFixed(2) + '</div><div class="ts-lbl">nota media</div></div>' +
+    '<div><div class="ts-num">' + mejor.toFixed(2) + '</div><div class="ts-lbl">mejor nota</div></div></div>';
+  html += '<div class="ts-sub">Aciertos por bloque</div>';
+  ['Bloque 1', 'Bloque 2', 'Bloque 3', 'Bloque 4'].forEach(bl => {
+    const d = st.byBlock[bl];
+    const pct = d && d.ans ? Math.round(d.ok / d.ans * 100) : 0;
+    const col = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--danger)';
+    html += '<div class="prog-row"><div class="prog-top"><span>' + bl + '</span><span>' + (d ? d.ok + '/' + d.ans + ' · ' + pct + '%' : '—') + '</span></div><div class="prog-track"><div class="prog-fill" style="width:' + pct + '%;background:' + col + ';"></div></div></div>';
+  });
+  html += '<div class="ts-sub">Evolución de la nota</div><div class="ts-chart">';
+  at.slice(-10).forEach(a => { const h = Math.max(3, Math.round(a.nota / 10 * 70)); html += '<div class="tc-col"><div class="tc-min">' + a.nota.toFixed(1) + '</div><div class="tc-bar" style="height:' + h + 'px;"></div></div>'; });
+  html += '</div>';
+  cont.innerHTML = html;
 }
 function closeResults() { document.getElementById('test-results').classList.remove('active'); testState = null; }
 function sendErrorsToNotes() {
