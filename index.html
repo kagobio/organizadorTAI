@@ -310,6 +310,8 @@
   .ts-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
   .ts-sub { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin: 18px 0 8px; }
   .ts-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+  .ts-year { font-size: 13px; font-weight: 700; color: var(--accent); margin: 12px 4px 6px; }
+  .ts-year:first-child { margin-top: 0; }
 
   .fab {
     position: fixed; right: 20px; bottom: calc(76px + var(--safe-bottom));
@@ -1029,7 +1031,7 @@ function saveExamDate() {
 // ============ Exámenes (Modo Examen) ============
 // c = índice de la respuesta correcta (0=a,1=b,2=c,3=d). b = bloque.
 const EXAMENES = {
-  '2024A-libre': { name: 'TAI 2024 · Modelo A · Libre', info: '77 preguntas de teoría (oficiales, 3 anuladas excluidas)', questions: [
+  '2024A-libre': { name: 'TAI 2024 · Modelo A · Libre', year: 2024, info: '77 preguntas de teoría (oficiales, 3 anuladas excluidas)', questions: [
     {n:1,b:'Bloque 1',q:'¿Cuál de los siguientes derechos recogidos en el Capítulo Segundo del Título I de la Constitución Española NO forma parte de los Derechos Fundamentales y Libertades Públicas (Artículos 15 a 29)?',o:['Derecho a sindicarse libremente.','Derecho a la propiedad privada.','Derecho a la producción y creación literaria, artística, científica y técnica.','Derecho a elegir libremente su residencia.'],c:1},
     {n:2,b:'Bloque 1',q:'Según el Título I, Capítulo Cuarto, "De las garantías de las libertades y derechos fundamentales" de la CE de 1978, señale la opción correcta:',o:['Los derechos y libertades reconocidos no vinculan a todas las Administraciones Públicas.','Sólo por ley orgánica podrá regularse el ejercicio de tales derechos y libertades.','Una ley orgánica regulará la institución del Defensor del Pueblo.','El reconocimiento y protección de los principios del Capítulo tercero informará la judicialización positiva, la práctica legislativa y la actuación de los poderes públicos.'],c:2},
     {n:3,b:'Bloque 1',q:'Señale la respuesta INCORRECTA de acuerdo con el Título II, artículo 62 de la CE de 1978. Corresponde al Rey:',o:['Convocar a referéndum en los casos previstos en la Constitución, previa autorización de las Cortes Generales.','Convocar y disolver las Cortes Generales y convocar elecciones en los términos previstos en la Constitución.','Proponer el candidato a Presidente de Gobierno y, en su caso, nombrarlo, así como poner fin a sus funciones.','Nombrar y separar a los miembros del Gobierno, a propuesta de su Presidente.'],c:0},
@@ -1107,6 +1109,84 @@ const EXAMENES = {
     {n:78,b:'Bloque 4',q:'¿Cuál de los siguientes ataques consiste en suplantar a una entidad legítima por medio de llamadas telefónicas?',o:['Pharming.','Smishing.','Vishing.','Whaling.'],c:2},
     {n:79,b:'Bloque 4',q:'La creación de un señuelo atractivo para atacantes con el objetivo de aprender sus ataques se hace mediante un:',o:['IPS.','SIEM.','IDS.','Honeypot.'],c:3},
     {n:80,b:'Bloque 4',q:'La herramienta del CCN que proporciona visibilidad y control sobre la red es:',o:['CARMEN.','EMMA.','MONICA.','OLVIDO.'],c:1}
+  ]},
+  '2022-libre': { name: 'TAI 2022 · Libre', year: 2022, info: '76 preguntas de teoría (oficiales, 4 anuladas excluidas)', questions: [
+    {n:1,b:'Bloque 1',q:'Según el artículo 64 de la CE de 1978, los actos del Rey, excepto la propuesta y el nombramiento del Presidente del Gobierno y la disolución de las Cámaras del art. 99, serán refrendados por:',o:['Los Presidentes del Congreso y el Senado.','Los Ministros o los Secretarios de Estado en función de la materia.','El Presidente del Gobierno y, en su caso, por los Presidentes del Congreso y el Senado.','El Presidente del Gobierno y, en su caso, por los Ministros competentes.'],c:3},
+    {n:2,b:'Bloque 1',q:'La suspensión de los derechos y libertades se encuentra regulada en la CE en:',o:['En el Capítulo III del Título I.','En sus artículos 52 y 53.','En el artículo 58.','En el Capítulo V del Título I.'],c:3},
+    {n:3,b:'Bloque 1',q:'Según el artículo 68 de la CE, ¿cuál es la circunscripción electoral en nuestro sistema electoral?',o:['La provincia.','El municipio.','La Comunidad Autónoma.','Distrito Municipal.'],c:0},
+    {n:4,b:'Bloque 1',q:'Según el artículo 18 de la Ley 50/1997 del Gobierno, ¿quién actúa como Secretario del Consejo de Ministros?',o:['El Vicepresidente Primero.','El Ministro portavoz del Gobierno.','El Ministro de la Presidencia.','El Ministro de Justicia.'],c:2},
+    {n:5,b:'Bloque 1',q:'Según el artículo 78 de la CE, expirado el mandato o disueltas las Cortes, las Diputaciones Permanentes seguirán ejerciendo sus funciones hasta:',o:['La celebración de las elecciones.','La proclamación de los resultados electorales definitivos.','La elección de los nuevos presidentes de cada Cámara.','La constitución de las nuevas Cortes Generales.'],c:3},
+    {n:6,b:'Bloque 1',q:'Según el art. 24 de la Ley 19/2013, el plazo máximo para resolver una reclamación ante el Consejo de Transparencia y Buen Gobierno será de:',o:['Un mes, transcurrido el cual se entenderá estimada.','Un mes, transcurrido el cual se entenderá desestimada.','Tres meses, transcurrido el cual se entenderá estimada.','Tres meses, transcurrido el cual se entenderá desestimada.'],c:3},
+    {n:7,b:'Bloque 1',q:'Señale cuál NO es un compromiso del IV Plan de Gobierno Abierto de España:',o:['Participación de los jóvenes en políticas públicas.','Protección de denunciantes.','Huella normativa.','Reforma del marco regulatorio.'],c:0},
+    {n:8,b:'Bloque 1',q:'Según el art. 18 de la Ley 53/1984 de Incompatibilidades, las resoluciones de compatibilidad se inscribirán:',o:['En el Registro Central de Personal.','En la Oficina de Conflicto de Intereses.','En la Unidad de Personal del Ministuerio u Organismo correspondiente.','En los Registros de Personal correspondientes.'],c:3},
+    {n:9,b:'Bloque 1',q:'Según el art. 30 de la Ley 39/2006 de Dependencia, el grado de dependencia será revisable:',o:['A instancia del interesado.','A instancia de los representantes del interesado.','De oficio por las Administraciones Públicas competentes.','Todas las respuestas anteriores son correctas.'],c:3},
+    {n:10,b:'Bloque 1',q:'Según el art. 49 de la LO 3/2007 de igualdad, para impulsar planes de igualdad el Gobierno establecerá:',o:['Medidas de acción positiva, especialmente dirigidas a las pequeñas y medianas empresas.','Medidas de fomento, especialmente dirigidas a las empresas de 50 o más trabajadores.','Medidas de fomento, especialmente dirigidas a las pequeñas y medianas empresas.','Medidas de acción positiva, dirigidas a cualquier empresa, pública o privada.'],c:2},
+    {n:11,b:'Bloque 1',q:'Con carácter general el DNI tendrá un período de validez de:',o:['Dos años cuando el solicitante no haya cumplido los cinco años de edad.','Cuatro años, cuando el titular haya cumplido los cinco años y no haya alcanzado los treinta.','Nueve años, cuando el titular haya cumplido los treinta y no haya alcanzado los setenta.','Permanente cuando el titular haya cumplido los sesenta años.'],c:0},
+    {n:12,b:'Bloque 1',q:'Según el art. 4 de la Ley 6/2020, el periodo de vigencia de los certificados cualificados:',o:['No será superior a 5 años.','No será superior a 3 años.','Es ilimitado.','No será superior a 6 años.'],c:0},
+    {n:13,b:'Bloque 1',q:'Según el título X de la LO 3/2018 (LOPDGDD), ¿cuál NO es un derecho digital?',o:['Derecho al testamento digital.','Derecho al olvido en redes sociales y servicios equivalentes.','Derecho a la desconexión digital en el ámbito laboral.','Derecho a la igualdad y a la no discriminación en el entorno digital.'],c:3},
+    {n:14,b:'Bloque 1',q:'Según el art. 34 de la LO 3/2018, se comunicarán a la AEPD las designaciones y ceses de los DPD en el plazo de:',o:['10 días.','15 días.','1 mes.','3 meses.'],c:0},
+    {n:15,b:'Bloque 1',q:'Según el RD 311/2022 (ENS), ¿cuál de las siguientes medidas afecta a la dimensión de Confidencialidad?',o:['Bloqueo de puesto de trabajo.','Firma electrónica.','Registro de la actividad.','Criptografía.'],c:3},
+    {n:16,b:'Bloque 1',q:'Sobre la Norma Técnica de Interoperabilidad de Protocolos de Intermediación de Datos, señale la correcta:',o:['Las tecnologías se implementarán en base a estándares según la NTI de Catálogo de estándares.','De forma general se utilizará la versión 2.0 del protocolo SCSP.','Emisores y Requirentes no mantendrán trazabilidad de los intercambios.','Los intercambios se podrán implementar a través de servicios web.'],c:3},
+    {n:17,b:'Bloque 4',q:'Sobre las soluciones de Ciberseguridad del CCN, señale la correcta:',o:['CLARA, protección y trazabilidad del dato.','ELENA, Simulador de Técnicas de Cibervigilancia.','GLORIA, Gestión de eventos e información de seguridad.','MONICA, Gestor de logs para responder ante incidentes.'],c:2},
+    {n:18,b:'Bloque 1',q:'Sobre los servicios comunes de administración electrónica, señale la correcta:',o:['SERVINOMINA realiza la gestión completa de las fases de nómina: cálculo, contabilidad y pago.','CIRCAB, herramienta de trabajo en grupo para intercambio de información.','eVISOR permite la consulta de nóminas de los cinco últimos años.','ENVIA es una aplicación para el envío de ficheros de gran volumen entre usuarios.'],c:3},
+    {n:19,b:'Bloque 1',q:'La CE regula la institución del Defensor del Pueblo como:',o:['Alto comisionado del Congreso de los Diputados.','Alto comisionado de las Cortes Generales.','Alto comisionado del Poder judicial.','Alto comisionado del Gobierno de la nación.'],c:1},
+    {n:20,b:'Bloque 3',q:'¿Qué es WCAG?',o:['Unas pautas de accesibilidad de contenidos web promovidas por el W3C.','Una librería de Java EE para crear aplicaciones web creada por Oracle.','Un componente del ecosistema Hadoop para Big Data.','Un framework javascript para bases de datos no relacionales.'],c:0},
+    {n:21,b:'Bloque 2',q:'¿Cuál es el nombre de un conector de carga y datos creado por Apple?',o:['USB-Tipo C','iUSB','iFirewire','Lightning'],c:3},
+    {n:22,b:'Bloque 3',q:'Respecto a las sentencias SQL, indique la INCORRECTA:',o:['DELETE sirve para borrar objetos como bases de datos, tablas o índices.','INSERT agrega uno o más registros a una tabla.','UPDATE modifica los valores de registros existentes.','GRANT se utiliza para dar permisos a un usuario.'],c:0},
+    {n:23,b:'Bloque 4',q:'¿Cuáles son los objetos básicos de Kubernetes?',o:['Pod, State, Volume, Namespace.','Pod, Service, Volume, Namespace.','Job, Service, Volume, Namespace.','Job, Pod, Volume, Deployment.'],c:1},
+    {n:24,b:'Bloque 2',q:'La ALU es una parte de:',o:['La memoria.','La CPU.','El bus de operaciones.','El multiplexor de entrada.'],c:1},
+    {n:25,b:'Bloque 2',q:'Sobre el modelo CISC, señale la correcta:',o:['La microprogramación es una característica esencial.','Plantea un conjunto reducido de instrucciones.','Implementa las instrucciones directamente en hardware.','Está muy extendido en procesadores de smartphones por su bajo consumo.'],c:0},
+    {n:26,b:'Bloque 2',q:'En relación con los sistemas RAID, señale la INCORRECTA:',o:['El RAID 1+0 exige un mínimo de 4 discos.','RAID 6 amplía el RAID 5 agregando un bloque de paridad.','RAID 5 necesita un mínimo de 3 discos.','Un RAID 4 distribuye la información a nivel de bloques con dos discos de paridad dedicados.'],c:3},
+    {n:27,b:'Bloque 2',q:'¿Cuál es una tecnología de almacenamiento en disco mediante bus serie?',o:['SATA','ATA','SCSI','DLT'],c:0},
+    {n:28,b:'Bloque 2',q:'Respecto a la norma USB, indique la INCORRECTA:',o:['USB Type-C es lo mismo que USB 3.1.','La diferencia entre USB 3.1 Gen 1 y Gen 2 se reduce solo a la velocidad.','USB 3.2 permite velocidades de hasta 20 Gbps.','Los dispositivos USB 2.0 alcanzan hasta 480 Mbps.'],c:0},
+    {n:29,b:'Bloque 2',q:'En teoría de grafos, el algoritmo del camino más corto desde un vértice origen en un grafo con pesos se denomina:',o:['Algoritmo de Kruskal.','Algoritmo de Prim.','Algoritmo de Dijkstra.','Algoritmo de Floyd-Warshall.'],c:2},
+    {n:30,b:'Bloque 3',q:'Con respecto a los estándares PDF, señale la NO correcta:',o:['PDF/UA es el estándar global para la accesibilidad de PDF.','PDF/A da especificaciones para conservar documentos a largo plazo.','PDF/E da especificaciones para flujos de trabajo de ingeniería.','PDF/I da especificaciones para páginas listas para imprimir o para prensa.'],c:3},
+    {n:31,b:'Bloque 2',q:'¿Cuál de las versiones siguientes es la más reciente del sistema operativo macOS?',o:['macOS Sierra','macOS Monterey','macOS Big Sur','macOS Ventura'],c:3},
+    {n:32,b:'Bloque 2',q:'¿Cuál de las siguientes afirmaciones NO es correcta (Windows 64 bits)?',o:['Un proceso de 64 bits no puede cargar una DLL de 32 bits.','Un proceso de 32 bits no puede cargar una DLL de 64 bits.','Se admiten RPC entre procesos de 64 y 32 bits solo en el mismo equipo.','Se admiten RPC entre procesos de 64 y 32 bits en el mismo equipo y entre equipos distintos.'],c:2},
+    {n:33,b:'Bloque 3',q:'Las propiedades ACID de las bases de datos relacionales se refieren a:',o:['Atomicidad, Consistencia, Aislamiento y Durabilidad.','Atomicidad, Coherencia, Integridad y Distribución.','Disponibilidad, Coherencia, Intensidad y Durabilidad.','Atomicidad, Consistencia, Aislamiento y Disponibilidad.'],c:0},
+    {n:34,b:'Bloque 3',q:'Entre las características obligatorias de un SGBD orientado a objetos, NO se encuentra:',o:['Debe permitir construir objetos complejos.','El conjunto de tipos de datos debe ser fijo.','Todos los objetos deben tener un identificador independiente de sus atributos.','El esquema de una BDOO incluye un conjunto de clases (o tipos).'],c:1},
+    {n:35,b:'Bloque 3',q:'¿Qué es Machine Learning Services para SQL Server?',o:['Tecnologías para copia y distribución de datos entre bases de datos.','Una característica de SQL Server que ejecuta scripts de Python y R con datos relacionales.','Un producto de calidad de datos basado en conocimiento.','El servicio principal para almacenar, procesar y proteger los datos.'],c:1},
+    {n:36,b:'Bloque 3',q:'Relativo al Modelo E/R Extendido según Métrica v3, señale la correcta:',o:['Un atributo se define sobre diversos dominios.','El dominio no tiene existencia propia y depende de entidades, relaciones o atributos.','La entidad es el objeto sobre el que se desea almacenar información.','La clave candidata garantiza la unicidad e identifica la ocurrencia unívocamente.'],c:2},
+    {n:38,b:'Bloque 3',q:'¿Cuál de las siguientes afirmaciones es FALSA?',o:['Un intérprete ejecuta directamente las instrucciones de un lenguaje.','Un compilador transforma el código fuente a otro lenguaje de más bajo nivel.','Un transpilador hace de intérprete y de compilador a la vez.','Un cross compiler crea código ejecutable para otra plataforma distinta.'],c:2},
+    {n:39,b:'Bloque 3',q:'C++ permite especificar más de una función con el mismo nombre en el mismo ámbito. Se denominan:',o:['Funciones dobles.','Funciones repetidas.','Funciones sobrecargadas.','En C++ no se puede nombrar más de una función igual.'],c:2},
+    {n:40,b:'Bloque 3',q:'Indica cuál de las siguientes afirmaciones es verdadera:',o:['Un array almacena un conjunto de datos homogéneo consecutivo en memoria.','Bytecode es el código binario obtenido tras la compilación (Java).','C++ es un lenguaje de segunda generación.','La declaración int vector2[] = {1,2,3,...} es incorrecta en C++.'],c:0},
+    {n:41,b:'Bloque 3',q:'Sobre los tipos de controladores (drivers) JDBC, señale la correcta:',o:['Los tipo 1 usan Java puro para implementar un protocolo de red del SGBD.','Los tipo 3 usan un protocolo de red y middleware para comunicarse con un servidor.','Los drivers JDBC se categorizan en 3 tipos.','Los tipo 2 son controladores puente que usan otra tecnología (ODBC).'],c:1},
+    {n:42,b:'Bloque 3',q:'Señale la INCORRECTA. Las anomalías de base de datos más corrientes son:',o:['Lecturas no repetibles.','Lecturas hundidas.','Lecturas sucias.','Lecturas fantasma.'],c:1},
+    {n:43,b:'Bloque 3',q:'En SQL, ¿cómo se eliminan los datos de una tabla pero no su definición?',o:['DROP TABLE','DELETE','REMOVE','ERASE'],c:1},
+    {n:44,b:'Bloque 3',q:'¿Qué término hace referencia a patrones para asignación de responsabilidades en diseño OO?',o:['OOD','GRASP','Booch','Fan-In & Fan-Out'],c:1},
+    {n:46,b:'Bloque 3',q:'Según Métrica v3, ¿qué diagrama describe en detalle un escenario de un caso de uso?',o:['Diagrama de Interacción.','Diagrama de representación.','Diagrama de flujo de datos.','Diagrama de casos de uso.'],c:0},
+    {n:47,b:'Bloque 3',q:'¿Cuál de las siguientes NO es una librería de Java de la Apache Foundation?',o:['Log4J','httpclient','commons-io','Mockete'],c:3},
+    {n:48,b:'Bloque 3',q:'Seleccione la correcta sobre .NET:',o:['.NET es un marco multiplataforma gratuito de Google.','.NET es un proyecto de código abierto.','.NET sirve exclusivamente para apps móviles.','.NET admite muchos lenguajes, a excepción de C#.'],c:1},
+    {n:49,b:'Bloque 3',q:'Señale la INCORRECTA referente al objeto POCO en .NET:',o:['Es una estructura de datos que solo contiene propiedades o campos públicos.','Es el acrónimo de Plain Old CLR Object.','No hereda de otra clase ni implementa una interfaz.','Podrá contener miembros como métodos, eventos y delegados.'],c:3},
+    {n:51,b:'Bloque 3',q:'¿Cuál es el estándar OASIS que define mecanismos para establecer y compartir contextos de seguridad?',o:['WS-Addressing','WS-Federation','WS-SecureConversation','WS-Policy'],c:2},
+    {n:52,b:'Bloque 3',q:'Sobre WSIL, señale la correcta:',o:['Es un método alternativo al descubrimiento de servicios Web.','Define el modelo de programación para desplegar servicios Web en Java EE.','Define un modo de publicar y encontrar información sobre servicios Web.','Es una organización que promueve la interoperatividad de servicios Web.'],c:0},
+    {n:53,b:'Bloque 3',q:'¿Cuál es el motor web desarrollado por The Mozilla Foundation?',o:['WebKit','Firefox','Gecko','Edge'],c:2},
+    {n:54,b:'Bloque 3',q:'¿Qué término está relacionado con XML-binary Optimized Packaging (XOP)?',o:['Reconstituted XML Infoset','XOP Header','XOP Package','Optimized Document'],c:2},
+    {n:55,b:'Bloque 3',q:'¿Cuál de los siguientes NO es un framework para javascript?',o:['Angular','Bootstrap','React','JDBC'],c:3},
+    {n:56,b:'Bloque 3',q:'Entre los análisis de seguridad del ciclo de vida del software, NO se encuentra:',o:['SAST (Static Application Security Testing).','S-SDLC (Secure Software Development Liability Control).','DAST (Dynamic Application Security Testing).','SCA (Software Composition Analysis).'],c:1},
+    {n:57,b:'Bloque 3',q:'El principio de accesibilidad web que exige que los componentes y la navegación se puedan utilizar es:',o:['La perceptibilidad.','La comprensibilidad.','La robustez.','La operabilidad.'],c:3},
+    {n:58,b:'Bloque 3',q:'Según Métrica v3, las pruebas que verifican el correcto ensamblaje entre componentes a través de sus interfaces son:',o:['Pruebas del sistema.','Pruebas de implantación.','Pruebas de regresión.','Pruebas de integración.'],c:3},
+    {n:59,b:'Bloque 3',q:'Según Métrica v3, ¿qué participantes están presentes en la tarea de "Elaboración de los Manuales de Usuario"?',o:['Usuarios Expertos.','Consultor de Sistemas de Información.','Equipo de Formación.','Equipo de Proyecto.'],c:3},
+    {n:60,b:'Bloque 3',q:'¿Cuál de las siguientes herramientas NO es un software de control de versiones?',o:['JMeter','Subversion','Mercurial','GIT'],c:0},
+    {n:61,b:'Bloque 2',q:'Señale la INCORRECTA sobre el kernel de un Sistema Operativo:',o:['Controla las funciones importantes del hardware.','Se encarga del procesamiento paralelo de tareas (multitasking).','Es el núcleo del procesador.','Recibe peticiones de servicio de los procesos y las comunica con el hardware.'],c:2},
+    {n:62,b:'Bloque 2',q:'En un sistema UNIX, ¿cuál es la INCORRECTA?',o:['El GID es el número de identificación de grupo.','El UID es el número de identificación de usuario.','El administrador del sistema se denomina root.','El proceso init se refiere al proceso de arranque de un usuario.'],c:3},
+    {n:63,b:'Bloque 4',q:'Respecto a la virtualización de máquinas, indique la FALSA:',o:['Facilita el despliegue de entornos.','Requiere aumentar la inversión en hardware específico para virtualización.','Posibilita ejecutar varios SO en una única máquina física.','Permite un mayor aprovechamiento de la capacidad del hardware.'],c:1},
+    {n:64,b:'Bloque 4',q:'Una copia de seguridad (backup) diferencial:',o:['Realiza una copia fiel: si se elimina un archivo en el origen, se elimina en la copia.','Partiendo de una copia completa, copia todos los datos modificados desde ese backup completo.','Copia solo los datos modificados desde el último backup (completo o incremental).','Realiza una copia integral de todos los contenidos.'],c:1},
+    {n:65,b:'Bloque 4',q:'¿En qué campo del objeto de Kubernetes se incluyen los valores que identifican unívocamente al objeto?',o:['kind','spec','apiVersion','metadata'],c:3},
+    {n:66,b:'Bloque 4',q:'¿Cuál de los siguientes NO es un protocolo de correo electrónico?',o:['IMAP','SMTP','Outlook','POP3'],c:2},
+    {n:67,b:'Bloque 4',q:'¿Cuál de los siguientes protocolos se utiliza para administrar dispositivos de una red?',o:['SMTP','DNS','FTP','CMIP'],c:3},
+    {n:68,b:'Bloque 4',q:'¿Qué comando del administrador SNMP se usa para recuperar datos voluminosos de una tabla MIB grande?',o:['GET','GET BULK','GET NEXT','GET RESPONSE'],c:1},
+    {n:69,b:'Bloque 4',q:'¿Qué es ECDSA?',o:['Un algoritmo de firma.','Un estándar estadounidense de cableado.','Un organismo regulador internacional.','Un protocolo de nivel de enlace.'],c:0},
+    {n:70,b:'Bloque 4',q:'Seleccione la INCORRECTA sobre la firma electrónica:',o:['Co-firma es la firma múltiple en la que todos los firmantes están al mismo nivel y no importa el orden.','En formato XAdES el resultado es un fichero de texto XML.','En XAdES se habla de firmas detached, enveloping y enveloped según dónde se guarde el original.','PAdES es el formato propio de Microsoft Office, con una implementación abierta en Open Office.'],c:3},
+    {n:71,b:'Bloque 4',q:'¿Cuál de estos equipos de interconexión trabaja a nivel de red (nivel 3 del modelo OSI)?',o:['Enrutadores (Routers).','Puentes (Bridges).','Conmutadores (Switches).','Concentradores (Hubs).'],c:0},
+    {n:72,b:'Bloque 4',q:'¿Cuál es la INCORRECTA acerca de la fibra óptica plástica (POF)?',o:['Está hecha de plástico (polimetilmetacrilato envuelto en polímeros fluoruros).','Permite aprovechar todo el ancho de banda sin pérdidas.','Ofrece un núcleo conductor menor que el de la fibra tradicional.','Es muy flexible, útil en instalaciones con tubos antiguos.'],c:2},
+    {n:73,b:'Bloque 4',q:'¿Cuál es el prefijo de dirección de Multicast en IPv6?',o:['::1/128','224.0.0.0/4','FF00::/8','FC00::/7'],c:2},
+    {n:74,b:'Bloque 4',q:'Seleccione la correcta sobre los niveles y servicios del modelo OSI:',o:['El modelo OSI se asimila a 2 niveles: TCP (1 a 4) e IP (5 a 7).','Las entidades del nivel N+1 ofrecen servicios usados por el nivel N.','Un servicio confirmado usa las 4 primitivas: Request, Indication, Response, Confirm.','Un servicio no confirmado usa 3 primitivas: Request, Indication, Response.'],c:2},
+    {n:75,b:'Bloque 4',q:'¿Qué organismo de la ONU está especializado en telecomunicaciones y las regula a nivel internacional?',o:['ICANN','ITU','IEEE','TIA'],c:1},
+    {n:76,b:'Bloque 4',q:'¿Qué parte de un certificado de sitio web necesita un navegador para establecer una conexión HTTPS?',o:['La clave pública del certificado, para descifrar los mensajes del sitio.','La clave privada del certificado, para cifrar los mensajes al sitio.','Las claves pública y privada del certificado.','Ninguna; el sitio recibe las claves del certificado de quien navega.'],c:0},
+    {n:77,b:'Bloque 4',q:'¿Qué es un portal cautivo?',o:['Un sitio web bloqueado por ransomware hasta pagar un rescate.','Una web con acceso limitado, en fase de pruebas antes de producción.','Un sitio web que no cumple el nivel AA de WCAG.','Una página web que gestiona el acceso de usuarios a una red, generalmente inalámbrica.'],c:3},
+    {n:78,b:'Bloque 4',q:'Entre los protocolos que puede usar una VPN para cifrado NO se encuentra:',o:['PPTP/MPPE','IPSec','L2TP/IPSec','KSEC 1.1'],c:3},
+    {n:79,b:'Bloque 4',q:'¿Qué significa CSMA/CD?',o:['Acceso múltiple por servicio de portadora y múltiples colisiones.','Acceso múltiple con detección de portadora y detección de colisiones.','Acceso único con múltiples colisiones y detección de portadora.','Acceso único de múltiples portadoras y detección de colisiones.'],c:1}
   ]}
 };
 
@@ -2822,15 +2902,20 @@ function setTestMode(m) { testMode = m; document.querySelectorAll('#mode-seg .se
 function renderTestsScreen() {
   const exCont = document.getElementById('test-exams');
   exCont.innerHTML = '';
-  Object.keys(EXAMENES).forEach(id => {
-    const ex = EXAMENES[id];
-    const b = document.createElement('button');
-    b.className = 'test-item';
-    b.innerHTML = '<div><div class="ti-name"></div><div class="ti-info"></div></div><span class="ti-count">' + ex.questions.length + '</span>';
-    b.querySelector('.ti-name').textContent = ex.name;
-    b.querySelector('.ti-info').textContent = ex.info || '';
-    b.onclick = () => startTest(ex.questions.slice(), ex.name);
-    exCont.appendChild(b);
+  const ids = Object.keys(EXAMENES);
+  const years = [...new Set(ids.map(id => EXAMENES[id].year || 0))].sort((a, b) => b - a);
+  years.forEach(y => {
+    const h = document.createElement('div'); h.className = 'ts-year'; h.textContent = y ? ('Año ' + y) : 'Otros'; exCont.appendChild(h);
+    ids.filter(id => (EXAMENES[id].year || 0) === y).forEach(id => {
+      const ex = EXAMENES[id];
+      const b = document.createElement('button');
+      b.className = 'test-item';
+      b.innerHTML = '<div><div class="ti-name"></div><div class="ti-info"></div></div><span class="ti-count">' + ex.questions.length + '</span>';
+      b.querySelector('.ti-name').textContent = ex.name;
+      b.querySelector('.ti-info').textContent = ex.info || '';
+      b.onclick = () => startTest(ex.questions.slice(), ex.name);
+      exCont.appendChild(b);
+    });
   });
   const blCont = document.getElementById('test-blocks');
   blCont.innerHTML = '';
