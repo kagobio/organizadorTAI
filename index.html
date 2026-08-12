@@ -312,6 +312,15 @@
   .ts-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
   .ts-year { font-size: 13px; font-weight: 700; color: var(--accent); margin: 12px 4px 6px; }
   .ts-year:first-child { margin-top: 0; }
+  .year-group { margin-bottom: 10px; border: 1px solid var(--separator); border-radius: 14px; overflow: hidden; background: var(--card); }
+  .year-header { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 15px 16px; font-size: 16px; font-weight: 700; cursor: pointer; color: var(--text); }
+  .yh-right { display: flex; align-items: center; gap: 10px; }
+  .yh-count { font-size: 13px; font-weight: 700; color: var(--accent); background: var(--bg-elevated); padding: 3px 10px; border-radius: 999px; }
+  .yh-chev { color: var(--text-secondary); transition: transform 0.2s; }
+  .year-header.open .yh-chev { transform: rotate(180deg); }
+  .year-body { padding: 4px 12px 12px; border-top: 1px solid var(--separator); }
+  .year-body .test-item { background: var(--bg-elevated); }
+  .year-sublabel { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin: 12px 4px 8px; }
 
   .fab {
     position: fixed; right: 20px; bottom: calc(76px + var(--safe-bottom));
@@ -502,9 +511,9 @@
     <button class="seg-btn active" data-mode="end" onclick="setTestMode('end')">Al terminar</button>
     <button class="seg-btn" data-mode="each" onclick="setTestMode('each')">Pregunta a pregunta</button>
   </div>
-  <div class="section-label" style="margin-top:20px;">Examen completo</div>
+  <div class="section-label" style="margin-top:20px;">Exámenes por año</div>
   <div id="test-exams"></div>
-  <div class="section-label" style="margin-top:20px;">Por bloques (preguntas mezcladas)</div>
+  <div class="section-label" style="margin-top:22px;">Por bloques · todos los años juntos</div>
   <div id="test-blocks"></div>
 
   <div class="section-label" style="margin-top:22px;">Repaso de fallos</div>
@@ -2972,7 +2981,7 @@ function renderPlan() {
 }
 
 // ============ Modo Examen ============
-let testState = null, testMode = 'end';
+let testState = null, testMode = 'end', openYears = null;
 const LETTERS = ['a', 'b', 'c', 'd'];
 function allExamQuestions() {
   const all = [];
@@ -2986,18 +2995,40 @@ function renderTestsScreen() {
   exCont.innerHTML = '';
   const ids = Object.keys(EXAMENES);
   const years = [...new Set(ids.map(id => EXAMENES[id].year || 0))].sort((a, b) => b - a);
+  if (openYears === null) openYears = new Set(years.length ? [years[0]] : []);
+  const blockNames = ['Bloque 1', 'Bloque 2', 'Bloque 3', 'Bloque 4'];
   years.forEach(y => {
-    const h = document.createElement('div'); h.className = 'ts-year'; h.textContent = y ? ('Año ' + y) : 'Otros'; exCont.appendChild(h);
-    ids.filter(id => (EXAMENES[id].year || 0) === y).forEach(id => {
-      const ex = EXAMENES[id];
-      const b = document.createElement('button');
-      b.className = 'test-item';
-      b.innerHTML = '<div><div class="ti-name"></div><div class="ti-info"></div></div><span class="ti-count">' + ex.questions.length + '</span>';
-      b.querySelector('.ti-name').textContent = ex.name;
-      b.querySelector('.ti-info').textContent = ex.info || '';
-      b.onclick = () => startTest(ex.questions.slice(), ex.name);
-      exCont.appendChild(b);
-    });
+    const yExams = ids.filter(id => (EXAMENES[id].year || 0) === y);
+    const yTotal = yExams.reduce((s, id) => s + EXAMENES[id].questions.length, 0);
+    const isOpen = openYears.has(y);
+    const group = document.createElement('div'); group.className = 'year-group';
+    const header = document.createElement('button');
+    header.className = 'year-header' + (isOpen ? ' open' : '');
+    header.innerHTML = '<span>' + (y ? ('Año ' + y) : 'Otros') + '</span><span class="yh-right"><span class="yh-count">' + yTotal + '</span><span class="yh-chev">▾</span></span>';
+    header.onclick = () => { if (openYears.has(y)) openYears.delete(y); else openYears.add(y); renderTestsScreen(); };
+    group.appendChild(header);
+    if (isOpen) {
+      const body = document.createElement('div'); body.className = 'year-body';
+      yExams.forEach(id => {
+        const ex = EXAMENES[id];
+        const b = document.createElement('button'); b.className = 'test-item';
+        b.innerHTML = '<div><div class="ti-name">Examen completo</div><div class="ti-info"></div></div><span class="ti-count">' + ex.questions.length + '</span>';
+        b.querySelector('.ti-info').textContent = ex.info || ex.name;
+        b.onclick = () => startTest(ex.questions.slice(), ex.name);
+        body.appendChild(b);
+      });
+      const lbl = document.createElement('div'); lbl.className = 'year-sublabel'; lbl.textContent = 'Por bloques de ' + y; body.appendChild(lbl);
+      blockNames.forEach(bl => {
+        const qs = yExams.flatMap(id => EXAMENES[id].questions.filter(q => q.b === bl));
+        if (!qs.length) return;
+        const b = document.createElement('button'); b.className = 'test-item';
+        b.innerHTML = '<div class="ti-name">' + bl + '</div><span class="ti-count">' + qs.length + '</span>';
+        b.onclick = () => startTest(shuffleArr(qs.slice()), bl + ' · ' + y);
+        body.appendChild(b);
+      });
+      group.appendChild(body);
+    }
+    exCont.appendChild(group);
   });
   const blCont = document.getElementById('test-blocks');
   blCont.innerHTML = '';
