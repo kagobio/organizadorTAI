@@ -321,6 +321,24 @@
   .year-body { padding: 4px 12px 12px; border-top: 1px solid var(--separator); }
   .year-body .test-item { background: var(--bg-elevated); }
   .year-sublabel { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin: 12px 4px 8px; }
+  #tr-timer { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+  #tr-timer.warn { color: var(--danger); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 9px 14px; border-radius: 999px; background: var(--bg-elevated); color: var(--text); font-size: 14px; font-weight: 600; border: 1px solid var(--separator); cursor: pointer; }
+  .chip:active { opacity: 0.7; }
+  .res-verdict { font-size: 18px; font-weight: 800; margin-top: 2px; }
+  .res-verdict.apto { color: var(--green); }
+  .res-verdict.noapto { color: var(--danger); }
+  #repeat-sheet { position: fixed; inset: 0; background: var(--bg); z-index: 130; display: none; flex-direction: column; padding-top: var(--safe-top); }
+  #repeat-sheet.active { display: flex; }
+  .rep-body { flex: 1; overflow-y: auto; padding: 16px; max-width: 640px; margin: 0 auto; width: 100%; }
+  .rep-group { border: 1px solid var(--separator); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; background: var(--card); }
+  .rep-head { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+  .rep-q { border-left: 3px solid var(--separator); padding: 6px 0 6px 12px; margin-bottom: 10px; }
+  .rep-exam { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary); }
+  .rep-txt { font-size: 14px; margin: 3px 0; }
+  .rep-ans { font-size: 12px; color: var(--green); }
+  .rep-practice { width: 100%; padding: 11px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; margin-top: 2px; }
 
   .fab {
     position: fixed; right: 20px; bottom: calc(76px + var(--safe-bottom));
@@ -511,10 +529,15 @@
     <button class="seg-btn active" data-mode="end" onclick="setTestMode('end')">Al terminar</button>
     <button class="seg-btn" data-mode="each" onclick="setTestMode('each')">Pregunta a pregunta</button>
   </div>
-  <div class="section-label" style="margin-top:20px;">Exámenes por año</div>
+  <div class="section-label" style="margin-top:20px;">Simulacro y test a medida</div>
+  <div id="test-custom"></div>
+  <div class="section-label" style="margin-top:22px;">Exámenes por año</div>
   <div id="test-exams"></div>
   <div class="section-label" style="margin-top:22px;">Por bloques · todos los años juntos</div>
   <div id="test-blocks"></div>
+
+  <div class="section-label" style="margin-top:22px;">Preguntas que se repiten</div>
+  <div id="test-repeats"></div>
 
   <div class="section-label" style="margin-top:22px;">Repaso de fallos</div>
   <div id="test-failed"></div>
@@ -742,6 +765,7 @@
 <div id="test-runner">
   <div class="tr-top">
     <span id="tr-progress">1 / 1</span>
+    <span id="tr-timer" style="display:none;"></span>
     <button onclick="quitTest()">Salir</button>
   </div>
   <div class="tr-body">
@@ -761,6 +785,7 @@
   <div class="res-head">
     <div id="res-title" class="tr-block" style="color:var(--text-secondary);"></div>
     <div class="res-score" id="res-score">0</div>
+    <div class="res-verdict" id="res-verdict"></div>
     <div class="res-detail">Nota sobre 10 (cada fallo resta 1/3)</div>
     <div class="res-detail" id="res-detail"></div>
   </div>
@@ -769,6 +794,14 @@
     <button style="background:var(--bg-elevated);color:var(--accent);" onclick="sendErrorsToNotes()">➕ Fallos al cuaderno</button>
     <button style="background:var(--accent);color:#fff;" onclick="closeResults()">Terminar</button>
   </div>
+</div>
+
+<div id="repeat-sheet">
+  <div class="tr-top">
+    <span style="font-weight:700;">Preguntas que se repiten</span>
+    <button onclick="closeRepeats()">Cerrar</button>
+  </div>
+  <div class="rep-body" id="repeat-list"></div>
 </div>
 
 <!-- ==================== MINI-VENTANA DEL CRONÓMETRO ==================== -->
@@ -2981,7 +3014,7 @@ function renderPlan() {
 }
 
 // ============ Modo Examen ============
-let testState = null, testMode = 'end', openYears = null;
+let testState = null, testMode = 'end', openYears = null, testTimer = null, repeatGroupsCache = null;
 const LETTERS = ['a', 'b', 'c', 'd'];
 function allExamQuestions() {
   const all = [];
@@ -3030,6 +3063,8 @@ function renderTestsScreen() {
     }
     exCont.appendChild(group);
   });
+  renderCustomSection();
+  renderRepeatsSection();
   const blCont = document.getElementById('test-blocks');
   blCont.innerHTML = '';
   ['Bloque 1', 'Bloque 2', 'Bloque 3', 'Bloque 4'].forEach(bl => {
@@ -3043,10 +3078,35 @@ function renderTestsScreen() {
   });
   renderTestExtras();
 }
-function startTest(list, title) {
-  testState = { list, idx: 0, answers: {}, mode: testMode, title };
+function startTest(list, title, opts) {
+  testState = { list, idx: 0, answers: {}, mode: testMode, title, timed: !!(opts && opts.timed) };
+  clearInterval(testTimer); testTimer = null;
+  const tEl = document.getElementById('tr-timer');
+  if (opts && opts.timed) {
+    testState.deadline = Date.now() + opts.timed * 1000;
+    tEl.style.display = '';
+    tickTimer();
+    testTimer = setInterval(tickTimer, 1000);
+  } else { tEl.style.display = 'none'; tEl.textContent = ''; }
   document.getElementById('test-runner').classList.add('active');
   renderQuestion();
+}
+function tickTimer() {
+  if (!testState || !testState.deadline) return;
+  const rem = Math.max(0, Math.round((testState.deadline - Date.now()) / 1000));
+  const m = Math.floor(rem / 60), s = rem % 60;
+  const tEl = document.getElementById('tr-timer');
+  tEl.textContent = '⏱ ' + m + ':' + String(s).padStart(2, '0');
+  tEl.classList.toggle('warn', rem <= 300);
+  if (rem <= 0) { clearInterval(testTimer); testTimer = null; finishTest(); }
+}
+function startSimulacro() {
+  const all = shuffleArr(allExamQuestions().slice());
+  startTest(all.slice(0, Math.min(80, all.length)), 'Simulacro cronometrado', { timed: 120 * 60 });
+}
+function startCustom(n) {
+  const all = shuffleArr(allExamQuestions().slice());
+  startTest(all.slice(0, n), 'Test a medida · ' + n + ' preguntas');
 }
 function renderQuestion() {
   const ts = testState, q = ts.list[ts.idx];
@@ -3077,8 +3137,9 @@ function renderQuestion() {
 function selectOption(i) { testState.answers[testState.idx] = i; renderQuestion(); }
 function testNext() { if (testState.idx < testState.list.length - 1) { testState.idx++; renderQuestion(); } }
 function testPrev() { if (testState.idx > 0) { testState.idx--; renderQuestion(); } }
-function quitTest() { if (confirm('¿Salir del test? Perderás el progreso.')) { testState = null; document.getElementById('test-runner').classList.remove('active'); } }
+function quitTest() { if (confirm('¿Salir del test? Perderás el progreso.')) { clearInterval(testTimer); testTimer = null; testState = null; document.getElementById('test-runner').classList.remove('active'); } }
 function finishTest() {
+  clearInterval(testTimer); testTimer = null;
   const ts = testState;
   let ok = 0, bad = 0, blank = 0;
   ts.list.forEach((q, i) => { const a = ts.answers[i]; if (a === undefined) blank++; else if (a === q.c) ok++; else bad++; });
@@ -3087,6 +3148,9 @@ function finishTest() {
   document.getElementById('test-runner').classList.remove('active');
   document.getElementById('res-title').textContent = ts.title;
   document.getElementById('res-score').textContent = nota.toFixed(2);
+  const verd = document.getElementById('res-verdict');
+  verd.textContent = nota >= 5 ? '✓ APTO' : '✗ NO APTO';
+  verd.className = 'res-verdict ' + (nota >= 5 ? 'apto' : 'noapto');
   document.getElementById('res-detail').textContent = ok + ' aciertos · ' + bad + ' fallos · ' + blank + ' en blanco (de ' + total + ')';
   const rev = document.getElementById('res-review');
   rev.innerHTML = '';
@@ -3173,6 +3237,88 @@ function sendErrorsToNotes() {
   if (added) { pushToCloud({ notes: state.notes }); alert(added + ' fallo(s) añadidos al cuaderno de errores.'); }
   else alert('¡No hay fallos que añadir!');
 }
+function renderCustomSection() {
+  const c = document.getElementById('test-custom');
+  if (!c) return;
+  const total = allExamQuestions().length;
+  c.innerHTML = '';
+  const sim = document.createElement('button');
+  sim.className = 'test-item';
+  sim.innerHTML = '<div><div class="ti-name">⏱️ Simulacro cronometrado</div><div class="ti-info">' + Math.min(80, total) + ' preguntas · 120 min · nota de corte 50%</div></div><span class="ti-count">120m</span>';
+  sim.onclick = () => startSimulacro();
+  c.appendChild(sim);
+  const lbl = document.createElement('div'); lbl.className = 'year-sublabel'; lbl.textContent = 'Test rápido al azar (todos los años)'; c.appendChild(lbl);
+  const row = document.createElement('div'); row.className = 'chip-row';
+  [10, 20, 40].forEach(n => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = n + ' preguntas'; b.onclick = () => startCustom(Math.min(n, total)); row.appendChild(b); });
+  const other = document.createElement('button'); other.className = 'chip'; other.textContent = 'Otro nº';
+  other.onclick = () => { const n = parseInt(prompt('¿Cuántas preguntas? (máx ' + total + ')'), 10); if (n && n > 0) startCustom(Math.min(n, total)); };
+  row.appendChild(other);
+  c.appendChild(row);
+}
+const REP_STOP = new Set('los las una unos unas que cual cuales por para con como sus siguiente siguientes son del respuesta correcta incorrecta falsa senale indique segun sobre entre este esta estos estas ser cuya cuyo cuando donde mas menos cada uno todo todos siguientes relacion siguiente cuales'.split(' '));
+function repTokens(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 4 && !REP_STOP.has(w));
+}
+function findRepeatGroups() {
+  if (repeatGroupsCache) return repeatGroupsCache;
+  const all = allExamQuestions();
+  const toks = all.map(q => new Set(repTokens(q.q)));
+  const parent = all.map((_, i) => i);
+  const find = x => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+  const TH = 0.4, MINSHARED = 3;
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+    const A = toks[i], B = toks[j];
+    if (!A.size || !B.size) continue;
+    let inter = 0; A.forEach(t => { if (B.has(t)) inter++; });
+    if (inter < MINSHARED) continue;
+    const jac = inter / (A.size + B.size - inter);
+    if (jac >= TH) parent[find(i)] = find(j);
+  }
+  const groups = {};
+  all.forEach((q, i) => { const r = find(i); (groups[r] = groups[r] || []).push(q); });
+  const res = Object.values(groups).filter(g => g.length >= 2 && new Set(g.map(q => q.exam)).size >= 2);
+  res.sort((a, b) => b.length - a.length);
+  repeatGroupsCache = res;
+  return res;
+}
+function renderRepeatsSection() {
+  const c = document.getElementById('test-repeats');
+  if (!c) return;
+  const groups = findRepeatGroups();
+  c.innerHTML = '';
+  if (!groups.length) { c.innerHTML = '<div class="test-hint" style="margin:0;">Aún no se detectan preguntas repetidas entre años.</div>'; return; }
+  const nQ = groups.reduce((s, g) => s + g.length, 0);
+  const b = document.createElement('button');
+  b.className = 'test-item';
+  b.innerHTML = '<div><div class="ti-name">🔁 Preguntas que se repiten</div><div class="ti-info">' + groups.length + ' grupos · ' + nQ + ' preguntas parecidas entre años</div></div><span class="ti-count">' + groups.length + '</span>';
+  b.onclick = () => openRepeats();
+  c.appendChild(b);
+}
+function openRepeats() {
+  const groups = findRepeatGroups();
+  const cont = document.getElementById('repeat-list');
+  cont.innerHTML = '';
+  groups.forEach(g => {
+    const card = document.createElement('div'); card.className = 'rep-group';
+    const head = document.createElement('div'); head.className = 'rep-head';
+    head.textContent = g.length + ' preguntas parecidas';
+    card.appendChild(head);
+    g.forEach(q => {
+      const row = document.createElement('div'); row.className = 'rep-q';
+      row.innerHTML = '<div class="rep-exam"></div><div class="rep-txt"></div><div class="rep-ans"></div>';
+      row.querySelector('.rep-exam').textContent = q.exam + ' · ' + q.b;
+      row.querySelector('.rep-txt').textContent = (q.n ? q.n + '. ' : '') + q.q;
+      row.querySelector('.rep-ans').textContent = 'Correcta: ' + LETTERS[q.c] + ') ' + q.o[q.c];
+      card.appendChild(row);
+    });
+    const pr = document.createElement('button'); pr.className = 'rep-practice'; pr.textContent = 'Practicar estas';
+    pr.onclick = () => { closeRepeats(); startTest(shuffleArr(g.slice()), 'Preguntas repetidas'); };
+    card.appendChild(pr);
+    cont.appendChild(card);
+  });
+  document.getElementById('repeat-sheet').classList.add('active');
+}
+function closeRepeats() { document.getElementById('repeat-sheet').classList.remove('active'); }
 
 // ============ TEMPORIZADOR (Pomodoro con descansos) ============
 let timerInterval = null, wakeLock = null, audioCtx = null, lastPhaseIdx = -1, lastTickTime = null, lastStudiedPush = 0;
