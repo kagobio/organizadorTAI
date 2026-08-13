@@ -346,9 +346,23 @@
   #tr-next { background: var(--bg-elevated); color: var(--accent); }
   #tr-finish { background: var(--accent); color: #fff; }
   #test-results { overflow-y: auto; }
-  .res-head { text-align: center; padding: 26px 18px 10px; }
-  .res-score { font-size: 56px; font-weight: 800; letter-spacing: -2px; }
-  .res-detail { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+  .res-head { text-align: center; padding: 22px 18px 12px; max-width: 460px; margin: 0 auto; }
+  .res-exam-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+  .res-ring { position: relative; width: 160px; height: 160px; margin: 14px auto 4px; }
+  .res-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--separator); stroke-width: 11; }
+  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 11; stroke-linecap: round; stroke-dasharray: 389.6; stroke-dashoffset: 389.6; transition: stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1); }
+  .res-ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .res-ring-center .res-score { font-size: 46px; font-weight: 800; letter-spacing: -1.5px; background: none; -webkit-text-fill-color: currentColor; color: var(--text); }
+  .res-score-max { font-size: 13px; color: var(--text-secondary); margin-top: -4px; }
+  .res-tiles { display: flex; gap: 10px; max-width: 420px; margin: 16px auto 0; }
+  .res-tile { flex: 1; background: var(--card); border: 1px solid var(--card-border); box-shadow: var(--card-shadow); border-radius: 14px; padding: 14px 6px; }
+  .rt-num { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .res-tile.ok .rt-num { color: var(--green); }
+  .res-tile.bad .rt-num { color: var(--danger); }
+  .res-tile.blank .rt-num { color: var(--text-secondary); }
+  .rt-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+  .res-caption { text-align: center; font-size: 12px; color: var(--text-secondary); margin: 16px auto 2px; }
   .res-list { padding: 8px 16px 16px; max-width: 640px; margin: 0 auto; width: 100%; }
   .res-row { border-left: 4px solid var(--separator); background: var(--card); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
   .res-row.ok { border-left-color: var(--green); }
@@ -380,9 +394,9 @@
   .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { padding: 9px 14px; border-radius: 999px; background: var(--bg-elevated); color: var(--text); font-size: 14px; font-weight: 600; border: 1px solid var(--separator); cursor: pointer; }
   .chip:active { opacity: 0.7; }
-  .res-verdict { font-size: 18px; font-weight: 800; margin-top: 2px; }
-  .res-verdict.apto { color: var(--green); }
-  .res-verdict.noapto { color: var(--danger); }
+  .res-verdict { display: inline-block; margin-top: 10px; padding: 6px 16px; border-radius: 999px; font-size: 14px; font-weight: 700; letter-spacing: 0.3px; }
+  .res-verdict.apto { color: var(--green); background: var(--green-soft); }
+  .res-verdict.noapto { color: var(--danger); background: var(--danger-soft); }
   #repeat-sheet { position: fixed; inset: 0; background: var(--bg); z-index: 130; display: none; flex-direction: column; padding-top: var(--safe-top); }
   #repeat-sheet.active { display: flex; }
   .rep-body { flex: 1; overflow-y: auto; padding: 16px; max-width: 640px; margin: 0 auto; width: 100%; }
@@ -419,6 +433,11 @@
   .ic { width: 18px; height: 18px; vertical-align: -3px; margin-right: 7px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
   .ic-fill { fill: currentColor; stroke: none; }
   .block-emoji .ic { width: 30px; height: 30px; margin: 0; vertical-align: middle; stroke: var(--accent); stroke-width: 1.8; }
+  .stat-flame .ic { width: 40px; height: 40px; margin: 0; stroke: var(--orange); stroke-width: 1.8; }
+  .topic-ficha .ic { width: 17px; height: 17px; margin: 0; vertical-align: -3px; }
+  .exam-mark svg { width: 12px; height: 12px; stroke: var(--danger); fill: none; stroke-width: 2.5; }
+  .detail-task .mark .ic { margin: 0; width: 20px; height: 20px; vertical-align: middle; }
+  .cs-lbl .ic, .ci-row .ic, .ci-label .ic { width: 15px; height: 15px; margin-right: 5px; }
 
   .fab {
     position: fixed; right: 20px; bottom: calc(76px + var(--safe-bottom));
@@ -596,7 +615,7 @@
     <span><i class="dot" style="background:var(--green)"></i>Completado</span>
     <span><i class="dot" style="background:var(--yellow)"></i>Parcial</span>
     <span><i class="dot" style="background:var(--gray-dot)"></i>Sin empezar</span>
-    <span>🎯 Examen</span>
+    <span><svg class="ic" viewBox="0 0 24 24" style="stroke:var(--danger);margin-right:5px;width:14px;height:14px;"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>Examen</span>
   </div>
 </section>
 
@@ -637,7 +656,7 @@
 <section id="screen-estadisticas" class="screen">
   <div class="screen-title">Estadísticas</div>
   <div class="stat-card">
-    <div class="stat-flame">🔥</div>
+    <div class="stat-flame"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2c3 4 6 6 6 10a6 6 0 0 1-12 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 0-8.5Z"/></svg></div>
     <div class="stat-value" id="stat-streak">0</div>
     <div class="stat-label">Días consecutivos estudiando</div>
   </div>
@@ -668,7 +687,7 @@
 <!-- ==================== REPASOS ==================== -->
 <section id="screen-repasos" class="screen">
   <div class="screen-title">Repasos</div>
-  <div class="repaso-hint">Del más olvidado al más reciente. Toca 📄 para leer la ficha; toca el tema cuando lo repases.</div>
+  <div class="repaso-hint">Del más olvidado al más reciente. Toca <svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;margin:0 1px;vertical-align:-2px;"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg> para leer la ficha; toca el tema cuando lo repases.</div>
   <div id="repasos-list"></div>
 </section>
 
@@ -767,12 +786,12 @@
 
 <div id="mini-timer" class="mini-timer">
   <div class="mini-left">
-    <span id="mini-phase">📖</span>
+    <span id="mini-phase"><svg class="ic" viewBox="0 0 24 24" style="margin:0;"><path d="M6 3h12v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M4 17h14"/></svg></span>
     <span class="mini-time" id="mini-time" onclick="editTimer()" title="Tocar para editar el tiempo">20:00</span>
     <span class="mini-sub" id="mini-sub">Estudio</span>
   </div>
   <div class="mini-actions">
-    <button id="mini-pause" onclick="togglePause()" title="Pausar / Reanudar">⏸</button>
+    <button id="mini-pause" onclick="togglePause()" title="Pausar / Reanudar"><svg class="ic ic-fill" viewBox="0 0 24 24" style="margin:0;"><rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/></svg></button>
     <button onclick="adjustTimer(30)" title="Adelantar 30 segundos">−30s</button>
     <button onclick="skipPhase()">Saltar</button>
     <button onclick="stopTimer()">Terminar</button>
@@ -785,16 +804,16 @@
 
 <div class="sheet-backdrop center-mode" id="complete-backdrop" onclick="if(event.target===this)closeComplete()">
   <div class="sheet centered">
-    <div style="font-size:52px;">🎉</div>
+    <div style="color:var(--green);line-height:1;"><svg viewBox="0 0 24 24" style="width:54px;height:54px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>
     <h2 style="margin:10px 0 4px;">¡Día completado!</h2>
     <div class="countdown-sub">Has terminado todas las tareas de hoy. ¡Enhorabuena, sigue así!</div>
     <div class="complete-stats">
-      <div><div class="cs-num" id="complete-streak">0</div><div class="cs-lbl">🔥 Días seguidos</div></div>
-      <div><div class="cs-num" id="complete-month">0</div><div class="cs-lbl">✅ Este mes</div></div>
+      <div><div class="cs-num" id="complete-streak">0</div><div class="cs-lbl"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2c3 4 6 6 6 10a6 6 0 0 1-12 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 0-8.5Z"/></svg>Días seguidos</div></div>
+      <div><div class="cs-num" id="complete-month">0</div><div class="cs-lbl"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Este mes</div></div>
     </div>
     <div class="complete-info">
-      <div class="ci-row"><span>⏱️ Tiempo estudiado hoy</span><b id="complete-time">0 min</b></div>
-      <div class="ci-label">📚 Temas de hoy</div>
+      <div class="ci-row"><span><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 13V9M9 2h6"/></svg>Tiempo estudiado hoy</span><b id="complete-time">0 min</b></div>
+      <div class="ci-label"><svg class="ic" viewBox="0 0 24 24"><path d="M6 3h12v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M4 17h14"/></svg>Temas de hoy</div>
       <div class="ci-topics" id="complete-topics">—</div>
     </div>
     <button class="btn-save" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;" onclick="closeComplete()">¡Genial!</button>
@@ -815,7 +834,7 @@
     <h2 id="day-detail-title">Día</h2>
     <div id="day-detail-block" class="countdown-sub" style="margin-top:-8px;"></div>
     <div id="day-detail-tasks"></div>
-    <a class="link-edit" onclick="openBlockPicker(detailDateKey)">✏️ Cambiar el bloque de este día</a>
+    <a class="link-edit" onclick="openBlockPicker(detailDateKey)"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Cambiar el bloque de este día</a>
     <button class="btn-cancel" style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:600;margin-top:12px;" onclick="closeDayDetail()">Cerrar</button>
   </div>
 </div>
@@ -870,15 +889,28 @@
 
 <div id="test-results">
   <div class="res-head">
-    <div id="res-title" class="tr-block" style="color:var(--text-secondary);"></div>
-    <div class="res-score" id="res-score">0</div>
+    <div id="res-title" class="res-exam-title"></div>
+    <div class="res-ring">
+      <svg viewBox="0 0 140 140">
+        <circle class="ring-track" cx="70" cy="70" r="62"></circle>
+        <circle class="ring-fill" id="res-ring-fill" cx="70" cy="70" r="62"></circle>
+      </svg>
+      <div class="res-ring-center">
+        <div class="res-score" id="res-score">0</div>
+        <div class="res-score-max">/ 10</div>
+      </div>
+    </div>
     <div class="res-verdict" id="res-verdict"></div>
-    <div class="res-detail">Nota sobre 10 (cada fallo resta 1/3)</div>
-    <div class="res-detail" id="res-detail"></div>
+    <div class="res-tiles">
+      <div class="res-tile ok"><div class="rt-num" id="res-ok">0</div><div class="rt-lbl">Aciertos</div></div>
+      <div class="res-tile bad"><div class="rt-num" id="res-bad">0</div><div class="rt-lbl">Fallos</div></div>
+      <div class="res-tile blank"><div class="rt-num" id="res-blank">0</div><div class="rt-lbl">En blanco</div></div>
+    </div>
+    <div class="res-caption" id="res-caption"></div>
   </div>
   <div class="res-list" id="res-review"></div>
   <div class="res-actions">
-    <button style="background:var(--bg-elevated);color:var(--accent);" onclick="sendErrorsToNotes()">➕ Fallos al cuaderno</button>
+    <button style="background:var(--bg-elevated);color:var(--accent);" onclick="sendErrorsToNotes()"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Fallos al cuaderno</button>
     <button style="background:var(--accent);color:#fff;" onclick="closeResults()">Terminar</button>
   </div>
 </div>
@@ -1568,7 +1600,7 @@ function renderTopicsList(block) {
     row.className = 'topic-row' + (dates.length > 0 ? ' done' : '');
     row.innerHTML = `
       <div class="topic-info"><div class="topic-name"></div><div class="topic-sub">${sub}</div></div>
-      ${FICHAS[t.id] ? '<button class="topic-ficha" title="Ver ficha">📄</button>' : ''}
+      ${FICHAS[t.id] ? '<button class="topic-ficha" title="Ver ficha">' + ICONS.fileText + '</button>' : ''}
       <div class="topic-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></div>`;
     row.querySelector('.topic-name').textContent = t.name;
     const fichaBtn = row.querySelector('.topic-ficha');
@@ -2620,7 +2652,7 @@ function renderCalendar() {
     const isExam = state.examDate === key;
     const cell = document.createElement('div');
     cell.className = 'cal-day' + (key === todayKey ? ' today' : '') + (isExam ? ' exam' : '');
-    cell.innerHTML = `<span>${d}</span>` + (isExam ? '<span class="exam-mark">🎯</span>' : `<span class="dot ${status}"></span>`);
+    cell.innerHTML = `<span>${d}</span>` + (isExam ? `<span class="exam-mark">${ICONS.flag}</span>` : `<span class="dot ${status}"></span>`);
     cell.onclick = () => openDayDetail(date);
     grid.appendChild(cell);
   }
@@ -2634,15 +2666,15 @@ function openDayDetail(date) {
   document.getElementById('day-detail-title').textContent =
     `${WEEKDAYS[date.getDay()].charAt(0).toUpperCase()+WEEKDAYS[date.getDay()].slice(1)} ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
   const ov = state.overrides && state.overrides[key];
-  document.getElementById('day-detail-block').textContent =
-    (state.examDate === key) ? '🎯 Día del examen' : (blockFor(date) + (ov ? ' · cambiado' : ''));
+  document.getElementById('day-detail-block').innerHTML =
+    (state.examDate === key) ? (ICONS.flag + 'Día del examen') : escapeHtml(blockFor(date) + (ov ? ' · cambiado' : ''));
   const cont = document.getElementById('day-detail-tasks');
   cont.innerHTML = '';
   TASKS.forEach(t => {
     const done = !!day[t.key];
     const row = document.createElement('div');
     row.className = 'detail-task';
-    row.innerHTML = `<span class="mark">${done ? '✅' : '⚪️'}</span><span style="${done?'':'color:var(--text-secondary)'}">${t.label}</span>`;
+    row.innerHTML = `<span class="mark">${done ? '<svg class="ic" viewBox="0 0 24 24" style="stroke:var(--green)"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg class="ic" viewBox="0 0 24 24" style="stroke:var(--gray-dot)"><circle cx="12" cy="12" r="9"/></svg>'}</span><span style="${done?'':'color:var(--text-secondary)'}">${t.label}</span>`;
     cont.appendChild(row);
   });
   document.getElementById('day-backdrop').classList.add('active');
@@ -3029,7 +3061,7 @@ function renderRepasos() {
         <div class="repaso-meta">${it.block} · ${it.n}×</div>
       </div>
       <div class="repaso-right">
-        ${FICHAS[it.id] ? '<button class="topic-ficha" title="Ver ficha">📄</button>' : ''}
+        ${FICHAS[it.id] ? '<button class="topic-ficha" title="Ver ficha">' + ICONS.fileText + '</button>' : ''}
         <div class="repaso-days${overdue ? ' overdue' : ''}">${daysTxt}</div>
       </div>`;
     row.querySelector('.repaso-name').textContent = it.name;
@@ -3113,7 +3145,15 @@ const ICONS = {
   repeat: '<svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>',
   plus: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   book: '<svg class="ic" viewBox="0 0 24 24"><path d="M6 3h12v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M4 17h14"/></svg>',
-  terminal: '<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>'
+  terminal: '<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>',
+  flame: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 2c3 4 6 6 6 10a6 6 0 0 1-12 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 0-8.5Z"/></svg>',
+  fileText: '<svg class="ic" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',
+  coffee: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 8h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h2a2 2 0 0 1 0 4h-2"/><path d="M7 2v2M11 2v2M14 2v2"/></svg>',
+  pause: '<svg class="ic ic-fill" viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/></svg>',
+  check: '<svg class="ic" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>',
+  checkCircle: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  flag: '<svg class="ic" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>',
+  circle: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>'
 };
 function allExamQuestions() {
   const all = [];
@@ -3195,7 +3235,7 @@ function tickTimer() {
   const rem = Math.max(0, Math.round((testState.deadline - Date.now()) / 1000));
   const m = Math.floor(rem / 60), s = rem % 60;
   const tEl = document.getElementById('tr-timer');
-  tEl.textContent = '⏱ ' + m + ':' + String(s).padStart(2, '0');
+  tEl.innerHTML = ICONS.timer + m + ':' + String(s).padStart(2, '0');
   tEl.classList.toggle('warn', rem <= 300);
   if (rem <= 0) { clearInterval(testTimer); testTimer = null; finishTest(); }
 }
@@ -3247,10 +3287,21 @@ function finishTest() {
   document.getElementById('test-runner').classList.remove('active');
   document.getElementById('res-title').textContent = ts.title;
   document.getElementById('res-score').textContent = nota.toFixed(2);
+  const apto = nota >= 5;
   const verd = document.getElementById('res-verdict');
-  verd.textContent = nota >= 5 ? '✓ APTO' : '✗ NO APTO';
-  verd.className = 'res-verdict ' + (nota >= 5 ? 'apto' : 'noapto');
-  document.getElementById('res-detail').textContent = ok + ' aciertos · ' + bad + ' fallos · ' + blank + ' en blanco (de ' + total + ')';
+  verd.textContent = apto ? '✓ APTO' : '✗ NO APTO';
+  verd.className = 'res-verdict ' + (apto ? 'apto' : 'noapto');
+  document.getElementById('res-ok').textContent = ok;
+  document.getElementById('res-bad').textContent = bad;
+  document.getElementById('res-blank').textContent = blank;
+  document.getElementById('res-caption').textContent = 'de ' + total + ' preguntas · cada fallo resta 1/3';
+  const ring = document.getElementById('res-ring-fill');
+  const C = 389.56;
+  ring.style.stroke = apto ? 'var(--green)' : 'var(--danger)';
+  ring.style.strokeDashoffset = C;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    ring.style.strokeDashoffset = (C * (1 - Math.max(0, Math.min(1, nota / 10)))).toFixed(1);
+  }));
   const rev = document.getElementById('res-review');
   rev.innerHTML = '';
   ts.list.forEach((q, i) => {
@@ -3535,10 +3586,10 @@ function tickSync() {
   const totalWork = segs.filter(s => s.type === 'work').length;
   const workDone = segs.slice(0, st.idx + 1).filter(s => s.type === 'work').length;
   const paused = !!state.session.pausedAt;
-  document.getElementById('mini-phase').textContent = st.seg.type === 'work' ? '📖' : '☕';
+  document.getElementById('mini-phase').innerHTML = st.seg.type === 'work' ? ICONS.book : ICONS.coffee;
   document.getElementById('mini-sub').textContent = paused ? '⏸ Pausado' : (st.seg.type === 'work' ? `Estudio ${workDone}/${totalWork}` : 'Descanso');
   const pauseBtn = document.getElementById('mini-pause');
-  if (pauseBtn) pauseBtn.textContent = paused ? '▶' : '⏸';
+  if (pauseBtn) pauseBtn.innerHTML = paused ? ICONS.play : ICONS.pause;
   document.getElementById('mini-timer').style.background = paused ? 'var(--text-secondary)' : (st.seg.type === 'work' ? 'var(--accent)' : 'var(--orange)');
   const m = Math.floor(st.remaining / 60), s = st.remaining % 60;
   const mmss = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
