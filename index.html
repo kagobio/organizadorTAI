@@ -382,8 +382,9 @@
 
   /* ============ Refinamiento visual (look profesional) ============ */
   .screen-title, .today-weekday { font-weight: 800; letter-spacing: -1px; }
-  .btn-primary { background: var(--accent-grad); box-shadow: 0 10px 22px -8px var(--accent); transition: transform 0.12s ease, box-shadow 0.12s ease; }
-  .btn-primary:active { transform: scale(0.985); box-shadow: 0 5px 14px -8px var(--accent); opacity: 1; }
+  .btn-primary { background: #4f46e5; box-shadow: none; transition: transform 0.12s ease; }
+  .btn-primary:active { transform: scale(0.985); opacity: 0.9; }
+  .btn-secondary { background: var(--card); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
   .block-card { background: linear-gradient(135deg, var(--accent-soft), var(--card)); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
   .exam-card { background: var(--card); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
   .checklist, .test-item, .note-card, .repaso-row, .year-group, #plan-list, .rep-group { box-shadow: var(--shadow-sm); }
