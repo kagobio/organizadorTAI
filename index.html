@@ -5,44 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f4f5f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0d13" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-title" content="Estudio TAI">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-512.png">
 <title>Estudio TAI</title>
 <style>
   :root {
-    --bg: #ffffff;
-    --bg-elevated: #f2f2f7;
+    --bg: #f4f5f8;
+    --bg-elevated: #eaecf1;
     --card: #ffffff;
-    --text: #000000;
-    --text-secondary: #8a8a8e;
-    --separator: #e5e5ea;
-    --accent: #007aff;
-    --green: #34c759;
-    --yellow: #ffcc00;
-    --orange: #ff9500;
-    --gray-dot: #d1d1d6;
-    --tabbar: rgba(249,249,249,0.94);
-    --danger: #ff3b30;
+    --text: #0f1420;
+    --text-secondary: #667085;
+    --separator: #e7e9f0;
+    --accent: #4f46e5;
+    --accent-2: #6366f1;
+    --accent-soft: rgba(79,70,229,0.10);
+    --accent-grad: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    --green: #16a34a;
+    --green-soft: rgba(22,163,74,0.10);
+    --yellow: #f59e0b;
+    --orange: #f97316;
+    --gray-dot: #cdd2dc;
+    --tabbar: rgba(255,255,255,0.80);
+    --danger: #e5484d;
+    --danger-soft: rgba(229,72,77,0.10);
+    --radius: 16px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 2px rgba(16,24,40,0.05), 0 2px 8px rgba(16,24,40,0.06);
+    --shadow-md: 0 8px 24px rgba(16,24,40,0.10), 0 2px 8px rgba(16,24,40,0.05);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #000000;
-      --bg-elevated: #1c1c1e;
-      --card: #1c1c1e;
-      --text: #ffffff;
-      --text-secondary: #98989f;
-      --separator: #38383a;
-      --accent: #0a84ff;
-      --green: #30d158;
-      --yellow: #ffd60a;
-      --orange: #ff9f0a;
-      --gray-dot: #48484a;
-      --tabbar: rgba(22,22,22,0.94);
-      --danger: #ff453a;
+      --bg: #0a0d13;
+      --bg-elevated: #171d28;
+      --card: #141a24;
+      --text: #eef1f6;
+      --text-secondary: #98a2b3;
+      --separator: #232b38;
+      --accent: #818cf8;
+      --accent-2: #6366f1;
+      --accent-soft: rgba(129,140,248,0.16);
+      --accent-grad: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+      --green: #34d399;
+      --green-soft: rgba(52,211,153,0.14);
+      --yellow: #fbbf24;
+      --orange: #fb923c;
+      --gray-dot: #3a4150;
+      --tabbar: rgba(10,13,19,0.72);
+      --danger: #f87171;
+      --danger-soft: rgba(248,113,113,0.14);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.28);
+      --shadow-md: 0 10px 28px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.30);
     }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -339,6 +356,25 @@
   .rep-txt { font-size: 14px; margin: 3px 0; }
   .rep-ans { font-size: 12px; color: var(--green); }
   .rep-practice { width: 100%; padding: 11px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; margin-top: 2px; }
+
+  /* ============ Refinamiento visual (look profesional) ============ */
+  .screen-title, .today-weekday { font-weight: 800; letter-spacing: -1px; }
+  .btn-primary { background: var(--accent-grad); box-shadow: 0 10px 22px -8px var(--accent); transition: transform 0.12s ease, box-shadow 0.12s ease; }
+  .btn-primary:active { transform: scale(0.985); box-shadow: 0 5px 14px -8px var(--accent); opacity: 1; }
+  .block-card { background: linear-gradient(135deg, var(--accent-soft), var(--card)); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
+  .exam-card { background: var(--card); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
+  .checklist, .test-item, .note-card, .repaso-row, .year-group, #plan-list, .rep-group { box-shadow: var(--shadow-sm); }
+  .ti-count, .yh-count { background: var(--accent-soft); }
+  .seg-btn.active { background: var(--card); box-shadow: var(--shadow-sm); }
+  .tr-opt { transition: border-color 0.12s ease, background 0.12s ease; }
+  .tr-opt.sel { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+  .tr-opt.correct { background: var(--green-soft); }
+  .tr-opt.wrong { background: var(--danger-soft); }
+  .tabbar { backdrop-filter: saturate(180%) blur(24px); -webkit-backdrop-filter: saturate(180%) blur(24px); }
+  .tab { position: relative; transition: color 0.15s ease; }
+  .tab.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 28px; height: 3px; border-radius: 0 0 4px 4px; background: var(--accent); }
+  .res-score { background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .chip:active { transform: scale(0.96); }
 
   .fab {
     position: fixed; right: 20px; bottom: calc(76px + var(--safe-bottom));
