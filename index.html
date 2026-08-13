@@ -12,6 +12,9 @@
 <link rel="apple-touch-icon" href="icon-512.png">
 <title>Estudio TAI</title>
 <script>(function(){try{var t=localStorage.getItem('tema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
   :root {
     --bg: #f4f5f8;
@@ -36,6 +39,9 @@
     --radius-lg: 20px;
     --shadow-sm: 0 1px 2px rgba(16,24,40,0.05), 0 2px 8px rgba(16,24,40,0.06);
     --shadow-md: 0 8px 24px rgba(16,24,40,0.10), 0 2px 8px rgba(16,24,40,0.05);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --card-border: rgba(16,24,40,0.05);
+    --card-shadow: 0 1px 3px rgba(16,24,40,0.06), 0 6px 16px -6px rgba(16,24,40,0.08);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
   }
@@ -61,6 +67,8 @@
       --danger-soft: rgba(248,113,113,0.14);
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.28);
       --shadow-md: 0 10px 28px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.30);
+      --card-border: rgba(255,255,255,0.07);
+      --card-shadow: none;
     }
   }
   :root[data-theme="dark"] {
@@ -84,14 +92,20 @@
     --danger-soft: rgba(248,113,113,0.14);
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.28);
     --shadow-md: 0 10px 28px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.30);
+    --card-border: rgba(255,255,255,0.07);
+    --card-shadow: none;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     margin: 0; padding: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-family: var(--font);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   body {
     padding-top: var(--safe-top);
@@ -381,13 +395,16 @@
   .rep-practice { width: 100%; padding: 11px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; margin-top: 2px; }
 
   /* ============ Refinamiento visual (look profesional) ============ */
-  .screen-title, .today-weekday { font-weight: 800; letter-spacing: -1px; }
+  .screen-title { font-size: 30px; font-weight: 800; letter-spacing: -0.022em; }
+  .today-weekday { font-weight: 800; letter-spacing: -0.022em; }
+  .section-label { font-weight: 600; letter-spacing: 0.02em; }
+  .check-row { font-size: 16px; }
   .btn-primary { background: #4f46e5; box-shadow: none; transition: transform 0.12s ease; }
   .btn-primary:active { transform: scale(0.985); opacity: 0.9; }
-  .btn-secondary { background: var(--card); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
-  .block-card { background: linear-gradient(135deg, var(--accent-soft), var(--card)); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
-  .exam-card { background: var(--card); border: 1px solid var(--separator); box-shadow: var(--shadow-sm); }
-  .checklist, .test-item, .note-card, .repaso-row, .year-group, #plan-list, .rep-group { box-shadow: var(--shadow-sm); }
+  .btn-secondary { background: var(--card); border: 1px solid var(--card-border); box-shadow: var(--card-shadow); }
+  .block-card { background: linear-gradient(150deg, var(--accent-soft), var(--card) 72%); border: 1px solid var(--card-border); box-shadow: var(--card-shadow); }
+  .exam-card { background: var(--card); border: 1px solid var(--card-border); box-shadow: var(--card-shadow); }
+  .checklist, .test-item, .note-card, .repaso-row, .year-group, #plan-list, .rep-group, .stat-card { border: 1px solid var(--card-border); box-shadow: var(--card-shadow); }
   .ti-count, .yh-count { background: var(--accent-soft); }
   .seg-btn.active { background: var(--card); box-shadow: var(--shadow-sm); }
   .tr-opt { transition: border-color 0.12s ease, background 0.12s ease; }
