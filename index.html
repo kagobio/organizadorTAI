@@ -988,6 +988,7 @@ function subscribeCloud() {
       state.overrides = d.overrides || {};
       state.testStats = d.testStats || {};
       saveSessionLocal();
+      flushPendingCredits(d.creditedSessions || {});   // confirma/reintenta el tiempo contado sin conexión
       remoteReady = true;
       showSync('Sincronizado ✓', true);
       renderAll();
@@ -2978,7 +2979,10 @@ function studiedSecondsToday() {
   const key = keyOf(new Date());
   const base = (state.logs[key] && state.logs[key].secs) || 0;
   const live = state.session ? studiedSeconds(state.session, Date.now()) : 0;
-  return base + live;
+  // Sesiones contadas sin conexión, aún no confirmadas en la nube (se muestran ya, pero no se suben dos veces).
+  let pend = 0;
+  for (const sid in pendingCredits) if (pendingCredits[sid].key === key) pend += pendingCredits[sid].secs;
+  return base + live + pend;
 }
 function formatDuration(secs) {
   const m = Math.round(secs / 60);
@@ -2991,36 +2995,59 @@ function updateTodayTime() {
   const el = document.getElementById('today-time');
   if (el) el.innerHTML = `${ICONS.timer}Hoy llevas <b>${formatDuration(studiedSecondsToday())}</b> estudiados`;
 }
-// Acumula el tiempo estudiado en el día al terminar/parar una sesión.
-let lastCreditedStart = null;
-// Suma el tiempo de la sesión UNA sola vez, aunque haya varios dispositivos abiertos.
+// ===== Contabilización idempotente del tiempo estudiado =====
+// Registro persistente por dispositivo: sesiones ya contadas aquí (evita recontar al recargar o reintentar).
+let creditedLocal = _lsLoad('tai_credited', {});
+// Sesiones contadas sin conexión, pendientes de confirmar en la nube (para que ningún dispositivo las sume dos veces).
+let pendingCredits = _lsLoad('tai_pending_credits', {});
+function _lsLoad(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+function _lsCap(obj, max) { const ids = Object.keys(obj); if (ids.length > max) ids.sort((a, b) => obj[a] - obj[b]).slice(0, ids.length - max).forEach(id => delete obj[id]); return obj; }
+function markCredited(sid) { creditedLocal[sid] = Date.now(); _lsCap(creditedLocal, 100); try { localStorage.setItem('tai_credited', JSON.stringify(creditedLocal)); } catch (e) {} }
+function savePending() { try { localStorage.setItem('tai_pending_credits', JSON.stringify(pendingCredits)); } catch (e) {} }
+
+// Suma el tiempo de la sesión UNA sola vez, aunque haya varios dispositivos o se recargue la app.
 function recordStudyTime(session, endNow) {
   if (!session || !session.segments) return;
+  const sid = String(session.start);              // identificador único de la sesión
+  if (creditedLocal[sid]) return;                 // este dispositivo ya la contó (recarga, reintento, doble evento)
   const secs = studiedSeconds(session, endNow);   // tiempo de los bloques de estudio transcurridos
-  if (secs <= 0) { lastCreditedStart = session.start; return; }
+  markCredited(sid);                              // marca YA: ningún otro camino de este dispositivo la recontará
+  if (secs <= 0) return;
   const key = keyOf(new Date());
-  const sid = String(session.start);          // identificador único de la sesión
-  if (!db || !docRef) { creditLocal(key, secs, session.start); return; }
-  // Transacción: comprueba si esa sesión ya se contó y, si no, la suma de forma atómica.
+  if (!db || !docRef) {                           // sin Firebase configurado: solo memoria local
+    if (!state.logs[key]) state.logs[key] = emptyDay();
+    state.logs[key].secs = (state.logs[key].secs || 0) + secs;
+    updateTodayTime();
+    return;
+  }
+  pendingCredits[sid] = { key, secs };            // visible en 'Hoy' hasta que la nube lo confirme
+  savePending();
+  commitCredit(sid);
+  updateTodayTime();
+}
+// Escribe en la nube por transacción idempotente: solo suma si esa sesión no estaba ya contada (por este u otro dispositivo).
+function commitCredit(sid) {
+  const p = pendingCredits[sid];
+  if (!p || !db || !docRef) return;
   db.runTransaction(tx => tx.get(docRef).then(doc => {
     const data = doc.data() || {};
     const credited = data.creditedSessions || {};
-    if (credited[sid]) return;                // ya la contó otro dispositivo
+    if (credited[sid]) return;                    // ya la contó otro dispositivo
     const logs = data.logs || {};
-    const day = logs[key] || {};
-    day.secs = (day.secs || 0) + secs;
+    const day = logs[p.key] || {};
+    day.secs = (day.secs || 0) + p.secs;
     credited[sid] = true;
-    tx.update(docRef, { ['logs.' + key]: day, creditedSessions: credited });
-  })).then(() => { lastCreditedStart = session.start; setTimeout(updateTodayTime, 400); })
-     .catch(() => creditLocal(key, secs, session.start));   // sin conexión: respaldo local
+    tx.update(docRef, { ['logs.' + p.key]: day, creditedSessions: credited });
+  })).then(() => { delete pendingCredits[sid]; savePending(); setTimeout(updateTodayTime, 300); })
+     .catch(() => {});   // sin conexión: queda en pendientes y se reintenta al reconectar (flushPendingCredits)
 }
-function creditLocal(key, secs, start) {
-  if (start === lastCreditedStart) return;
-  lastCreditedStart = start;
-  if (!state.logs[key]) state.logs[key] = emptyDay();
-  state.logs[key].secs = ((state.logs[key].secs) || 0) + secs;
-  pushToCloud({ logs: { [key]: state.logs[key] } });
-  updateTodayTime();
+// Al reconectar / recibir estado de la nube: descarta pendientes ya reflejadas y reintenta el resto.
+function flushPendingCredits(cloudCredited) {
+  if (!db || !docRef) return;
+  let changed = false;
+  if (cloudCredited) for (const sid in pendingCredits) if (cloudCredited[sid]) { delete pendingCredits[sid]; changed = true; }
+  if (changed) savePending();
+  for (const sid in pendingCredits) commitCredit(sid);
 }
 function showDayComplete() {
   document.getElementById('complete-streak').textContent = computeStreak();
